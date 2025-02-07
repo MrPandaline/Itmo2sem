@@ -1,19 +1,22 @@
 package ru.itmo.java.homoursus.laba5.logic;
 
-
 import ru.itmo.java.homoursus.laba5.commands.ICommand;
 
 import java.util.HashMap;
 
 public class CommandManager {
-    HashMap<String, ICommand> commands = new HashMap<String, ICommand>();
+    private HashMap<String, ICommand> commands = new HashMap<>();
 
     public void addCommand(String commandName, ICommand command) {
         this.commands.put(commandName, command);
     }
 
     //TODO: добавить обработку случая, когда команда не найдена
-    public ICommand getCommand(String commandName) {
+    public ICommand getCommandByName(String commandName) {
         return this.commands.get(commandName);
+    }
+
+    public String[] getCommandNames() {
+        return this.commands.keySet().toArray(new String[0]);
     }
 }

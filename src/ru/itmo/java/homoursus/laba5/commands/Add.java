@@ -1,6 +1,10 @@
 package ru.itmo.java.homoursus.laba5.commands;
 
-import ru.itmo.java.homoursus.laba5.input.IInputManager;
+
+
+import ru.itmo.java.homoursus.laba5.App;
+import ru.itmo.java.homoursus.laba5.logic.ModelHandler;
+import ru.itmo.java.homoursus.laba5.model.Dragon;
 
 public class Add implements ICommand {
     @Override
@@ -9,7 +13,10 @@ public class Add implements ICommand {
     }
 
     @Override
-    public void execute() {
+    public void execute(App app, String[] args) {
+        ModelHandler handler = new ModelHandler(app.getInput());
+        Dragon dragon = handler.handleDragon();
+        app.getCollection().add(dragon);
 
     }
 }

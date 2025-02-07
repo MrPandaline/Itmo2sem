@@ -1,14 +1,15 @@
 package ru.itmo.java.homoursus.laba5.logic;
 
-import ru.itmo.java.homoursus.laba5.Dragon;
+import ru.itmo.java.homoursus.laba5.model.Dragon;
 
 import java.util.Collection;
-import java.util.LinkedList;
 
-public class CollectionManager {
+public class CollectionManager <T> {
 
-    private Collection<Dragon> collection = new LinkedList<Dragon>();
+    private Collection<T> collection;
 
-    public CollectionManager() {}
+    public CollectionManager(Collection<T> collection) {
+        this.collection = collection;
+    }
 
 }

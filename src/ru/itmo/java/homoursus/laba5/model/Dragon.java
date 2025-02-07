@@ -1,7 +1,5 @@
-package ru.itmo.java.homoursus.laba5;
+package ru.itmo.java.homoursus.laba5.model;
 
-import ru.itmo.java.homoursus.laba5.model.Coordinates;
-import ru.itmo.java.homoursus.laba5.model.Person;
 import ru.itmo.java.homoursus.laba5.model.modelEnums.DragonCharacter;
 import ru.itmo.java.homoursus.laba5.model.modelEnums.DragonType;
 
@@ -31,6 +29,37 @@ public class Dragon {
         this.type = type;
         this.character = character;
         this.killer = killer;
-        
-    }   
+    }
+
+    public DragonCharacter getCharacter() {
+        return character;
+    }
+
+    public DragonType getType() {
+        return type;
+    }
+
+    public Coordinates getCoordinates() {
+        return coordinates;
+    }
+
+    public long getAge() {
+        return age;
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public Person getKiller() {
+        return killer;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public String getName() {
+        return name;
+    }
 }

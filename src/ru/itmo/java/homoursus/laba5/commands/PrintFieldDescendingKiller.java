@@ -1,5 +1,7 @@
 package ru.itmo.java.homoursus.laba5.commands;
 
+import ru.itmo.java.homoursus.laba5.App;
+
 public class PrintFieldDescendingKiller implements ICommand {
     @Override
     public String getDescription() {
@@ -7,7 +9,7 @@ public class PrintFieldDescendingKiller implements ICommand {
     }
 
     @Override
-    public void execute() {
+    public void execute(App app, String[] args) {
 
     }
 }

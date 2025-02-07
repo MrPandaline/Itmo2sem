@@ -1,25 +1,30 @@
 package ru.itmo.java.homoursus.laba5;
 
 import ru.itmo.java.homoursus.laba5.commands.*;
-import ru.itmo.java.homoursus.laba5.input.ConsoleInputManager;
-import ru.itmo.java.homoursus.laba5.input.IInputManager;
+import ru.itmo.java.homoursus.laba5.input.ConsoleIOManager;
+import ru.itmo.java.homoursus.laba5.input.IIOManager;
 import ru.itmo.java.homoursus.laba5.logic.CommandManager;
+import ru.itmo.java.homoursus.laba5.model.Dragon;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.LinkedList;
 
 public class App {
-    IInputManager input;
+    private IIOManager input;
+    private CommandManager commandManager;
+    private LinkedList<Dragon> collection;
     private boolean isAppWorking;
 
     {
         isAppWorking = true;
     }
 
-    public App() {
-        this.input = new ConsoleInputManager(new BufferedReader(new InputStreamReader(System.in)));
+    public App(LinkedList<Dragon> collection) {
+        this.input = new ConsoleIOManager(new BufferedReader(new InputStreamReader(System.in)));
 
-        CommandManager commandManager = new CommandManager();
+        this.collection = collection;
+        this.commandManager = new CommandManager();
         commandManager.addCommand("help", new Help());
         commandManager.addCommand("info", new Info());
         commandManager.addCommand("show", new Show());
@@ -42,8 +47,34 @@ public class App {
         String userInput;
         while (isAppWorking) {
             userInput = input.getInput();
+
+            String[] userInputList = userInput.split(" ");
+
+            ICommand cmd = commandManager.getCommandByName(userInputList[0]);
+
+            if (cmd != null){
+                //TODO: передавать не весь список а срез с первого элемента
+                cmd.execute(this, userInputList);
+            }
+            else {
+                System.out.println("Команда не найдена: " + userInputList[0] + ", повторите ввод.");
+            }
+
             System.out.println(userInput);
 
         }
     }
+
+    public LinkedList<Dragon> getCollection() {
+        return collection;
+    }
+
+    public CommandManager getCommandManager() {
+        return commandManager;
+    }
+
+    public IIOManager getInput() {
+        return input;
+    }
 }
+

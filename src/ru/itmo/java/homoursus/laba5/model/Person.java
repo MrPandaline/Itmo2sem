@@ -1,6 +1,5 @@
 package ru.itmo.java.homoursus.laba5.model;
 
-import ru.itmo.java.homoursus.laba5.model.Location;
 import ru.itmo.java.homoursus.laba5.model.modelEnums.Color;
 import ru.itmo.java.homoursus.laba5.model.modelEnums.Country;
 
@@ -20,5 +19,29 @@ public class Person {
     this.hairColor = hairColor;
     this.nationality = nationality;
     this.location = location;     
+    }
+
+    public Color getEyeColor() {
+        return eyeColor;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public Color getHairColor() {
+        return hairColor;
+    }
+
+    public Country getNationality() {
+        return nationality;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public Location getLocation() {
+        return location;
     }
 }
