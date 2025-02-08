@@ -16,7 +16,6 @@ public class Add implements ICommand {
     public void execute(App app, String[] args) {
         ModelHandler handler = new ModelHandler(app.getInput());
         Dragon dragon = handler.handleDragon();
-        app.getCollection().add(dragon);
-
+        app.getCollectionManager().getCollection().add(dragon);
     }
 }

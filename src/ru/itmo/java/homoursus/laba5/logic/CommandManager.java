@@ -16,6 +16,10 @@ public class CommandManager {
         return this.commands.get(commandName);
     }
 
+    public ICommand[] getCommands() {
+        return this.commands.values().toArray(new ICommand[0]);
+    }
+
     public String[] getCommandNames() {
         return this.commands.keySet().toArray(new String[0]);
     }

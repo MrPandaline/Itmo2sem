@@ -3,6 +3,7 @@ package ru.itmo.java.homoursus.laba5;
 import ru.itmo.java.homoursus.laba5.commands.*;
 import ru.itmo.java.homoursus.laba5.input.ConsoleIOManager;
 import ru.itmo.java.homoursus.laba5.input.IIOManager;
+import ru.itmo.java.homoursus.laba5.logic.CollectionManager;
 import ru.itmo.java.homoursus.laba5.logic.CommandManager;
 import ru.itmo.java.homoursus.laba5.model.Dragon;
 
@@ -13,7 +14,7 @@ import java.util.LinkedList;
 public class App {
     private IIOManager input;
     private CommandManager commandManager;
-    private LinkedList<Dragon> collection;
+    private CollectionManager<Dragon> collection;
     private boolean isAppWorking;
 
     {
@@ -23,7 +24,7 @@ public class App {
     public App(LinkedList<Dragon> collection) {
         this.input = new ConsoleIOManager(new BufferedReader(new InputStreamReader(System.in)));
 
-        this.collection = collection;
+        this.collection = new CollectionManager<>(collection);
         this.commandManager = new CommandManager();
         commandManager.addCommand("help", new Help());
         commandManager.addCommand("info", new Info());
@@ -47,25 +48,25 @@ public class App {
         String userInput;
         while (isAppWorking) {
             userInput = input.getInput();
-
-            String[] userInputList = userInput.split(" ");
-
-            ICommand cmd = commandManager.getCommandByName(userInputList[0]);
+            String[] args = null;
+            if (!userInput.isEmpty()) {
+                args = userInput.split(" ");
+            }
+            //TODO: сделать нормальную обработку null через исключения
+            ICommand cmd = commandManager.getCommandByName(args[0]);
 
             if (cmd != null){
                 //TODO: передавать не весь список а срез с первого элемента
-                cmd.execute(this, userInputList);
+                cmd.execute(this, args);
             }
             else {
-                System.out.println("Команда не найдена: " + userInputList[0] + ", повторите ввод.");
+                System.out.println("Команда не найдена: " + args[0] +
+                        ", введите help для получения списка доступных комманд");
             }
-
-            System.out.println(userInput);
-
         }
     }
 
-    public LinkedList<Dragon> getCollection() {
+    public CollectionManager<Dragon> getCollectionManager() {
         return collection;
     }
 
@@ -75,6 +76,10 @@ public class App {
 
     public IIOManager getInput() {
         return input;
+    }
+
+    public void turnOffApp(){
+        isAppWorking = false;
     }
 }
 

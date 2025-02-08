@@ -3,6 +3,7 @@ package ru.itmo.java.homoursus.laba5.input;
 import java.io.BufferedReader;
 import java.io.IOException;
 
+
 public class ConsoleIOManager implements IIOManager {
     BufferedReader reader;
 
@@ -13,12 +14,15 @@ public class ConsoleIOManager implements IIOManager {
         String input = "";
         try {
             input = this.reader.readLine().toLowerCase();
+            if(input.isEmpty()){
+                input = null;
+            }
         }
         catch (IOException e) {e.printStackTrace();}
         return input;
     }
 
     public void writeMessage(String message){
-        System.out.println(message);
+        System.out.print(message);
     }
 }

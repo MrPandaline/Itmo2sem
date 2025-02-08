@@ -10,6 +10,6 @@ public class Exit implements ICommand{
 
     @Override
     public void execute(App app, String[] args) {
-
+        app.turnOffApp();
     }
 }

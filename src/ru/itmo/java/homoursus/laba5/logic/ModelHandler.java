@@ -10,6 +10,9 @@ import ru.itmo.java.homoursus.laba5.model.modelEnums.Country;
 import ru.itmo.java.homoursus.laba5.model.modelEnums.DragonCharacter;
 import ru.itmo.java.homoursus.laba5.model.modelEnums.DragonType;
 
+
+//TODO: добававить обработку ошибок связанных с парсерами
+//TODO: добавить валидатор модели
 public class ModelHandler {
 
     private IIOManager ioManager;
@@ -21,17 +24,17 @@ public class ModelHandler {
     public Dragon handleDragon() {
         ioManager.writeMessage("Введите имя дракона: ");
         String name = ioManager.getInput();
-        ioManager.writeMessage("Введите координаты дракона: ");
+        ioManager.writeMessage("Введите координаты дракона: \n" );
         Coordinates coordinates = handleCoordinates();
         ioManager.writeMessage("Введите возраст дракона: ");
         long age = Long.parseLong(ioManager.getInput());
         ioManager.writeMessage("Введите описание дракона: ");
         String description = ioManager.getInput();
-        ioManager.writeMessage("Введите тип дракона: ");
+        ioManager.writeMessage("Введите тип дракона: \n");
         DragonType dragonType = handleEnum(DragonType.FIRE);
-        ioManager.writeMessage("Введите характер дракона: ");
+        ioManager.writeMessage("Введите характер дракона: \n");
         DragonCharacter dragonCharacter = handleEnum(DragonCharacter.EVIL);
-        ioManager.writeMessage("Введите убийцу дракона: ");
+        ioManager.writeMessage("Введите убийцу дракона: \n");
         Person killer = handlePerson();
         return new Dragon(name, coordinates, age, description, dragonType, dragonCharacter, killer);
     }
@@ -76,6 +79,7 @@ public class ModelHandler {
         for (Enum enumeration : enumClass.getDeclaringClass().getEnumConstants()){
             ioManager.writeMessage(enumeration + " ");
         }
+        ioManager.writeMessage("\n");
         return T.valueOf(enumClass.getDeclaringClass() ,ioManager.getInput().toUpperCase());
     }
 }
