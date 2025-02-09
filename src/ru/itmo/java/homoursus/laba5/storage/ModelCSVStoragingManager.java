@@ -101,7 +101,7 @@ public class ModelCSVStoragingManager implements IModelStorageManager {
                 collection.add(dragon);
             }
         } catch(FileNotFoundException e){
-            ioManager.writeMessage("Файл не найден!");
+            ioManager.writeMessage("Файл коллекции не найден!\n");
         } catch(IOException e){
             throw new RuntimeException(e);
         }
@@ -119,7 +119,7 @@ public class ModelCSVStoragingManager implements IModelStorageManager {
                 }
             }
         } catch(FileNotFoundException e){
-            ioManager.writeMessage("Файл не найден!");
+            ioManager.writeMessage("Файл коллекции не найден! Генерация id начнётся с 1.\n");
         } catch(IOException e){
             throw new RuntimeException(e);
         }

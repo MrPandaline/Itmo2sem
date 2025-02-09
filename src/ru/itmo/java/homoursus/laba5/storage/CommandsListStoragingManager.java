@@ -23,7 +23,7 @@ public class CommandsListStoragingManager {
                 arrayList.add(s);
             }
         } catch (FileNotFoundException e) {
-            ioManager.writeMessage("Файл не найден!");
+            ioManager.writeMessage("Файл, хранящий список последних команд, не найден!\n");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
