@@ -15,5 +15,8 @@ public class PrintFieldDescendingKiller implements ICommand {
     public void execute(App app, String[] args) {
         LinkedList<Dragon> collection = app.getCollectionManager().getCollection();
         collection.sort((a, b) -> a.name().compareTo(b.name()));
+        for (Dragon dragon : collection) {
+            app.getIoManager().writeMessage(dragon.toString() + "\n");
+        }
     }
 }

@@ -10,56 +10,67 @@ import ru.itmo.java.homoursus.laba5.model.modelEnums.Country;
 import ru.itmo.java.homoursus.laba5.model.modelEnums.DragonCharacter;
 import ru.itmo.java.homoursus.laba5.model.modelEnums.DragonType;
 
+import java.util.ArrayList;
+
 
 //TODO: добававить обработку ошибок связанных с парсерами
 //TODO: добавить валидатор модели
-public class ModelHandler {
+public class ModelBuilder {
 
-    private IIOManager ioManager;
+    private final IIOManager ioManager;
 
-    public ModelHandler(IIOManager ioManager) {
+    public ModelBuilder(IIOManager ioManager) {
         this.ioManager = ioManager;
     }
 
     public Dragon handleDragon() {
         ioManager.writeMessage("Введите имя дракона: ");
-        String name = ioManager.getInput();
+        String name = ioManager.getValidRawInput(a -> (a != null));
         ioManager.writeMessage("Введите координаты дракона: \n" );
+        ioManager.getValidRawInput(a -> (a != null));
         Coordinates coordinates = handleCoordinates();
         ioManager.writeMessage("Введите возраст дракона: ");
-        long age = Long.parseLong(ioManager.getInput());
+        long age = ioManager.getValidDigit(Long::parseLong, a -> (a > 0));
         ioManager.writeMessage("Введите описание дракона: ");
-        String description = ioManager.getInput();
+        String description = ioManager.getRawInput();
         ioManager.writeMessage("Введите тип дракона: \n");
-        DragonType dragonType = handleEnum(DragonType.FIRE);
+        DragonType dragonType = handleEnum(DragonType.FIRE, true);
         ioManager.writeMessage("Введите характер дракона: \n");
-        DragonCharacter dragonCharacter = handleEnum(DragonCharacter.EVIL);
+        DragonCharacter dragonCharacter = handleEnum(DragonCharacter.EVIL, false);
         ioManager.writeMessage("Введите убийцу дракона: \n");
-        Person killer = handlePerson();
+        String nullKillerFlag = ioManager.getRawInput();
+        Person killer;
+        if (nullKillerFlag != null) {
+            killer = handlePerson();
+        }
+        else {
+            killer = null;
+        }
+        ioManager.writeMessage("Дракон успешно добавлен в коллекцию!\n");
         return new Dragon(name, coordinates, age, description, dragonType, dragonCharacter, killer);
     }
 
     public Location handleLocation() {
         ioManager.writeMessage("Введите координату x: ");
-        float x = Float.parseFloat(ioManager.getInput());
+        float x = ioManager.getValidDigit(Float::parseFloat, a -> (a > -589));
         ioManager.writeMessage("Введите координату y: ");
-        double y = Double.parseDouble(ioManager.getInput());
+        double y = ioManager.getDigit(Double::parseDouble);
         ioManager.writeMessage("Введите координату z: ");
-        Integer z = Integer.parseInt(ioManager.getInput());
+        Integer z = ioManager.getDigit(Integer::parseInt);
         return new Location(x, y, z);
     }
 
     public Person handlePerson() {
         ioManager.writeMessage("Введите имя человека: ");
-        String name = ioManager.getInput();
+        String name = ioManager.getRawInput();
         ioManager.writeMessage("Введите рост человека: ");
-        int height = Integer.parseInt(ioManager.getInput());
+        int height = ioManager.getValidDigit(Integer::parseInt, a -> (a > 0));
         ioManager.writeMessage("Введите цвет глаз человека: ");
-        Color eyeColor = handleEnum(Color.BLACK);
+        Color eyeColor = handleEnum(Color.BLACK, false);
         ioManager.writeMessage("Введите цвет волос человека: ");
-        Color hairColor = handleEnum(Color.BLACK);
+        Color hairColor = handleEnum(Color.BLACK, false);
         ioManager.writeMessage("Введите национальность человека: ");
-        Country nationality = handleEnum(Country.CHINA);
+        Country nationality = handleEnum(Country.CHINA, false);
         ioManager.writeMessage("Введите локацию: ");
         Location location = handleLocation();
 
@@ -68,18 +79,25 @@ public class ModelHandler {
     }
     public Coordinates handleCoordinates() {
         ioManager.writeMessage("Введите координату x: ");
-        float x = Float.parseFloat(ioManager.getInput());
+        float x = ioManager.getValidDigit(Float::parseFloat, a -> (a > -589));
         ioManager.writeMessage("Введите координату y: ");
-        int y = Integer.parseInt(ioManager.getInput());
+        int y = ioManager.getDigit(Integer::parseInt);
         return new Coordinates(x, y);
     }
 
-    //TODO: Разобраться как сделать обобщённый метод, чтобы ловить все перечисления
-    private <T extends Enum<T>> T handleEnum(T enumClass){
-        for (Enum enumeration : enumClass.getDeclaringClass().getEnumConstants()){
+    private <T extends Enum<T>> T handleEnum(T enumClass, boolean canBeNull){
+        ArrayList<String> constants = new ArrayList<>();
+        for (Enum<?> enumeration : enumClass.getDeclaringClass().getEnumConstants()){
             ioManager.writeMessage(enumeration + " ");
+            constants.add(enumeration.name());
         }
         ioManager.writeMessage("\n");
-        return T.valueOf(enumClass.getDeclaringClass() ,ioManager.getInput().toUpperCase());
+        String input = ioManager.getConstantString(constants, canBeNull);
+        if (input != null) {
+            return T.valueOf(enumClass.getDeclaringClass(), input);
+        } else {
+            return null;
+        }
+
     }
 }

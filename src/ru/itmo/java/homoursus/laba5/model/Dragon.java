@@ -14,6 +14,9 @@ public record Dragon(String name, Coordinates coordinates, long age, String desc
                 person, idGenerator++, java.time.ZonedDateTime.now());
     }
 
+    public static void setIdGenerator(long idGenerator) {
+        Dragon.idGenerator = idGenerator;
+    }
 
     @Override
     public int compareTo(Dragon o) {

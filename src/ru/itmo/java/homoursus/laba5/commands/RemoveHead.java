@@ -15,7 +15,7 @@ public class RemoveHead implements ICommand{
     @Override
     public void execute(App app, String[] args) {
         LinkedList<Dragon> linkedList = app.getCollectionManager().getCollection();
-        IIOManager ioManager = app.getInput();
+        IIOManager ioManager = app.getIoManager();
         ioManager.writeMessage("Первый элемент коллекции: " + linkedList.poll() + "\n");
     }
 }

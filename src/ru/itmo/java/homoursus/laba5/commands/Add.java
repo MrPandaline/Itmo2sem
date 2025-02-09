@@ -3,7 +3,7 @@ package ru.itmo.java.homoursus.laba5.commands;
 
 
 import ru.itmo.java.homoursus.laba5.App;
-import ru.itmo.java.homoursus.laba5.logic.ModelHandler;
+import ru.itmo.java.homoursus.laba5.logic.ModelBuilder;
 import ru.itmo.java.homoursus.laba5.model.Dragon;
 
 public class Add implements ICommand {
@@ -14,7 +14,7 @@ public class Add implements ICommand {
 
     @Override
     public void execute(App app, String[] args) {
-        ModelHandler handler = new ModelHandler(app.getInput());
+        ModelBuilder handler = new ModelBuilder(app.getIoManager());
         Dragon dragon = handler.handleDragon();
         app.getCollectionManager().getCollection().add(dragon);
     }

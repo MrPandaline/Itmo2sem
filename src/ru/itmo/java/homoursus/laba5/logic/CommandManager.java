@@ -1,6 +1,7 @@
 package ru.itmo.java.homoursus.laba5.logic;
 
 import ru.itmo.java.homoursus.laba5.commands.ICommand;
+import ru.itmo.java.homoursus.laba5.exceptions.CommandNotFound;
 
 import java.util.HashMap;
 
@@ -12,8 +13,13 @@ public class CommandManager {
     }
 
     //TODO: добавить обработку случая, когда команда не найдена
-    public ICommand getCommandByName(String commandName) {
-        return this.commands.get(commandName);
+    public ICommand getCommandByName(String commandName) throws CommandNotFound {
+        if (commands.containsKey(commandName)) {
+            return commands.get(commandName);
+        }
+        else {
+            throw new CommandNotFound();
+        }
     }
 
     public ICommand[] getCommands() {

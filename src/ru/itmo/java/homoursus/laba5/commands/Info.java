@@ -13,7 +13,7 @@ public class Info implements ICommand{
     @Override
     public void execute(App app, String[] args) {
         CollectionManager<?> collectionManager = app.getCollectionManager();
-        IIOManager ioManager = app.getInput();
+        IIOManager ioManager = app.getIoManager();
         ioManager.writeMessage("Тип коллекции: " + collectionManager.getCollectionType().getName() + "\n");
         ioManager.writeMessage("Время инициализации коллекции: " +
                 collectionManager.getCollectionInitializationTime().toString() + "\n");

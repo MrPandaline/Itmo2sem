@@ -11,7 +11,7 @@ public class Help implements ICommand{
 
     @Override
     public void execute(App app, String[] args) {
-        IIOManager ioManager = app.getInput();
+        IIOManager ioManager = app.getIoManager();
         ICommand[] commands = app.getCommandManager().getCommands();
         String[] commandsNames = app.getCommandManager().getCommandNames();
 
