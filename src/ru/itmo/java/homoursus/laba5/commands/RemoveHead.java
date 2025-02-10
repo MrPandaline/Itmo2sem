@@ -6,6 +6,11 @@ import ru.itmo.java.homoursus.laba5.model.Dragon;
 
 import java.util.LinkedList;
 
+/**
+ * Класс команды, реализующий вывод первого элемента коллекции и его удаление.
+ * @author Homoursus
+ * @version 1.0
+ */
 public class RemoveHead implements ICommand{
     @Override
     public String getDescription() {

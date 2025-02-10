@@ -14,13 +14,24 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 
+/**
+ * Класс, управляющий записью (чтением) коллекции в .csv файл по пути <b>path</b> (из файла).
+ * @author Homoursus
+ * @version 1.0
+ */
 public class ModelCSVStoragingManager implements IModelStorageManager {
+    /** Путь до файла, в который (из которого) будет происходить запись (чтение) коллекции.*/
     String path;
 
+    /**
+     * Конструктор менеджера записи (чтения) коллекции в (из) .csv файл(а).
+     * @param path путь до .csv файла
+     */
     public ModelCSVStoragingManager(String path) {
         this.path = path;
     }
 
+    /** @see IModelStorageManager#writeToStorage */
     @Override
     public void writeToStorage( LinkedList<Dragon> collection) {
         final char SEPARATOR = ';';
@@ -39,14 +50,14 @@ public class ModelCSVStoragingManager implements IModelStorageManager {
                 }
                 osw.write(dragon.dragonCharacter().toString() + SEPARATOR);
                 if (dragon.dragonType() != null) {
-                    osw.write(dragon.person().name() + SEPARATOR);
-                    osw.write(String.valueOf(dragon.person().height()) + SEPARATOR);
-                    osw.write(dragon.person().eyeColor().toString() + SEPARATOR);
-                    osw.write(dragon.person().hairColor().toString() + SEPARATOR);
-                    osw.write(dragon.person().nationality().toString() + SEPARATOR);
-                    osw.write(String.valueOf(dragon.person().location().x()) + SEPARATOR);
-                    osw.write(String.valueOf(dragon.person().location().y()) + SEPARATOR);
-                    osw.write(String.valueOf(dragon.person().location().z()) + SEPARATOR);
+                    osw.write(dragon.killer().name() + SEPARATOR);
+                    osw.write(String.valueOf(dragon.killer().height()) + SEPARATOR);
+                    osw.write(dragon.killer().eyeColor().toString() + SEPARATOR);
+                    osw.write(dragon.killer().hairColor().toString() + SEPARATOR);
+                    osw.write(dragon.killer().nationality().toString() + SEPARATOR);
+                    osw.write(String.valueOf(dragon.killer().location().x()) + SEPARATOR);
+                    osw.write(String.valueOf(dragon.killer().location().y()) + SEPARATOR);
+                    osw.write(String.valueOf(dragon.killer().location().z()) + SEPARATOR);
                 }
                 else {
                     for (int i = 0; i < 8; i++) {
@@ -61,7 +72,7 @@ public class ModelCSVStoragingManager implements IModelStorageManager {
             e.printStackTrace();
         }
     }
-
+    /** @see IModelStorageManager#readFromStorage  */
     @Override
     public LinkedList<Dragon> readFromStorage(IIOManager ioManager) {
         LinkedList<Dragon> collection = new LinkedList<>();
@@ -108,6 +119,7 @@ public class ModelCSVStoragingManager implements IModelStorageManager {
         return collection;
     }
 
+    /** @see IModelStorageManager#getNextID  */
     @Override
     public long getNextID(IIOManager ioManager) {
         long usedID = 0;

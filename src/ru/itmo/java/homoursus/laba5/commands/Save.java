@@ -6,10 +6,15 @@ import ru.itmo.java.homoursus.laba5.storage.IModelStorageManager;
 
 import java.util.LinkedList;
 
+/**
+ * Класс команды, реализующий сохранение элементов коллекции в хранилище.
+ * @author Homoursus
+ * @version 1.0
+ */
 public class Save implements ICommand{
     @Override
     public String getDescription() {
-        return "Сохранить коллекцию в файл";
+        return "Сохранить коллекцию в хранилище";
     }
 
     @Override

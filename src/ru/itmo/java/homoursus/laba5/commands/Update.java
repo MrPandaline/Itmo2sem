@@ -7,6 +7,11 @@ import ru.itmo.java.homoursus.laba5.model.Dragon;
 
 import java.util.LinkedList;
 
+/**
+ * Класс команды, реализующий обновление элемента коллекции по id.
+ * @author Homoursus
+ * @version 1.0
+ */
 public class Update implements ICommand{
     @Override
     public String getDescription() {
@@ -24,7 +29,7 @@ public class Update implements ICommand{
             int id = Integer.parseInt(args[0]);
             for(Dragon dragon : linkedList){
                 if (dragon.id() == id){
-                    Dragon newDragon = new ModelBuilder(app.getIoManager()).handleDragon();
+                    Dragon newDragon = new ModelBuilder(app.getIoManager()).buildDragon();
                     linkedList.set(linkedList.indexOf(dragon), newDragon);
                 }
             }

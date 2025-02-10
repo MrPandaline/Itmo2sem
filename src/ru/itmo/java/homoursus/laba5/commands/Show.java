@@ -4,6 +4,11 @@ import ru.itmo.java.homoursus.laba5.App;
 
 import java.util.LinkedList;
 
+/**
+ * Класс команды, реализующий вывод всех элементов коллекции.
+ * @author Homoursus
+ * @version 1.0
+ */
 public class Show implements ICommand{
     @Override
     public String getDescription() {

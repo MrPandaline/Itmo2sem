@@ -3,6 +3,11 @@ package ru.itmo.java.homoursus.laba5.commands;
 import ru.itmo.java.homoursus.laba5.App;
 import ru.itmo.java.homoursus.laba5.input.IIOManager;
 
+/**
+ * Класс команды, реализующий вывод информации по всем доступным командам.
+ * @author Homoursus
+ * @version 1.0
+ */
 public class Help implements ICommand{
     @Override
     public String getDescription() {

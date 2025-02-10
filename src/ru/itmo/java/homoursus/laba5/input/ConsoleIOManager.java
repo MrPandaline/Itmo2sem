@@ -6,7 +6,11 @@ import java.util.ArrayList;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-
+/**
+ * Класс реализующий модуль ввода-вывода через консоль.
+ * @author Homoursus
+ * @version 1.0
+ */
 public class ConsoleIOManager implements IIOManager {
     BufferedReader reader;
 
@@ -45,7 +49,7 @@ public class ConsoleIOManager implements IIOManager {
     @Override
     public <T extends Number> T getValidDigit(Function<String, T> function, Predicate<T> condition) {
         T input = null;
-        while(input == null){;
+        while(input == null){
             T testInput = getDigit(function);
             if(condition.test(testInput)){
                 input = testInput;

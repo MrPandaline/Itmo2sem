@@ -2,8 +2,11 @@ package ru.itmo.java.homoursus.laba5.commands;
 
 import ru.itmo.java.homoursus.laba5.App;
 
-import java.util.Collection;
-
+/**
+ * Класс команды, реализующий вывод последних 15 использованных команд.
+ * @author Homoursus
+ * @version 1.0
+ */
 public class History implements ICommand{
     @Override
     public String getDescription() {

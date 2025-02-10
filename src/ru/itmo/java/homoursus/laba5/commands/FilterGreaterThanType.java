@@ -5,8 +5,14 @@ import ru.itmo.java.homoursus.laba5.input.IIOManager;
 import ru.itmo.java.homoursus.laba5.model.Dragon;
 import ru.itmo.java.homoursus.laba5.model.modelEnums.DragonType;
 
+import java.util.Collections;
 import java.util.LinkedList;
 
+/**
+ * Класс команды, реализующий вывод элементов коллекции, значение поля type которых, передано в команду.
+ * @author Homoursus
+ * @version 1.0.1
+ */
 public class FilterGreaterThanType implements ICommand{
     @Override
     public String getDescription() {
@@ -26,9 +32,10 @@ public class FilterGreaterThanType implements ICommand{
             for (Dragon dragon : linkedList) {
                 if (dragon.dragonType() == dragonType || flag) {
                     flag = true;
-                    ioManager.writeMessage(dragon.toString() + "\n");
+                    ioManager.writeMessage(dragon + "\n");
                 }
             }
+            Collections.sort(linkedList);
         }
     }
 }

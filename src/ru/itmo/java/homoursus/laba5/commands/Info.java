@@ -4,6 +4,12 @@ import ru.itmo.java.homoursus.laba5.App;
 import ru.itmo.java.homoursus.laba5.input.IIOManager;
 import ru.itmo.java.homoursus.laba5.logic.CollectionManager;
 
+/**
+ * Класс команды, реализующий вывод информации о коллекции.
+ * Выводит тип, время инициализации, размер и класс, экземпляры которого содержатся в коллекции.
+ * @author Homoursus
+ * @version 1.0
+ */
 public class Info implements ICommand{
     @Override
     public String getDescription() {

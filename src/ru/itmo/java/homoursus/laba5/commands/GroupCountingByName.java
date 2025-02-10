@@ -7,6 +7,12 @@ import ru.itmo.java.homoursus.laba5.model.Dragon;
 import java.util.HashMap;
 import java.util.LinkedList;
 
+/**
+ * Класс команды, реализующий группировку элементов коллекции по имени дракона.
+ * Выводит количество элементов в каждой группе.
+ * @author Homoursus
+ * @version 1.0
+ */
 public class GroupCountingByName implements ICommand{
     @Override
     public String getDescription() {
@@ -30,7 +36,7 @@ public class GroupCountingByName implements ICommand{
             }
         }
         for (String name : countMap.keySet()) {
-            ioManager.writeMessage("Элементов коллекции с именем " + name + ": " + countMap.get(name));
+            ioManager.writeMessage("Элементов коллекции с именем " + name + ": " + countMap.get(name) + "\n");
         }
     }
 }

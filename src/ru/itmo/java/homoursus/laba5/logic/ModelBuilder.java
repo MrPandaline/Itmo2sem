@@ -13,35 +13,44 @@ import ru.itmo.java.homoursus.laba5.model.modelEnums.DragonType;
 import java.util.ArrayList;
 
 
-//TODO: добававить обработку ошибок связанных с парсерами
-//TODO: добавить валидатор модели
+/**
+ * Класс, создающий модель по вводу пользователя.
+ * @author Homoursus
+ * @version 1.0
+ */
 public class ModelBuilder {
 
+    /** Ссылка на используемую реализацию менеджера ввода-вывода.*/
     private final IIOManager ioManager;
 
+    /**
+     * Конструктор класса.
+     * @param ioManager Используемый менеджер ввода-вывода
+     * */
     public ModelBuilder(IIOManager ioManager) {
         this.ioManager = ioManager;
     }
 
-    public Dragon handleDragon() {
+    /** Метод, создающий объект класса Dragon по вводу пользователя.*/
+    public Dragon buildDragon() {
         ioManager.writeMessage("Введите имя дракона: ");
         String name = ioManager.getValidRawInput(a -> (a != null));
         ioManager.writeMessage("Введите координаты дракона: \n" );
         ioManager.getValidRawInput(a -> (a != null));
-        Coordinates coordinates = handleCoordinates();
+        Coordinates coordinates = buildCoordinates();
         ioManager.writeMessage("Введите возраст дракона: ");
         long age = ioManager.getValidDigit(Long::parseLong, a -> (a > 0));
         ioManager.writeMessage("Введите описание дракона: ");
         String description = ioManager.getRawInput();
         ioManager.writeMessage("Введите тип дракона: \n");
-        DragonType dragonType = handleEnum(DragonType.FIRE, true);
+        DragonType dragonType = buildEnum(DragonType.FIRE, true);
         ioManager.writeMessage("Введите характер дракона: \n");
-        DragonCharacter dragonCharacter = handleEnum(DragonCharacter.EVIL, false);
+        DragonCharacter dragonCharacter = buildEnum(DragonCharacter.EVIL, false);
         ioManager.writeMessage("Введите убийцу дракона: \n");
         String nullKillerFlag = ioManager.getRawInput();
         Person killer;
         if (nullKillerFlag != null) {
-            killer = handlePerson();
+            killer = buildPerson();
         }
         else {
             killer = null;
@@ -50,7 +59,8 @@ public class ModelBuilder {
         return new Dragon(name, coordinates, age, description, dragonType, dragonCharacter, killer);
     }
 
-    public Location handleLocation() {
+    /** Метод, создающий объект класса Location по вводу пользователя.*/
+    public Location buildLocation() {
         ioManager.writeMessage("Введите координату x: ");
         float x = ioManager.getValidDigit(Float::parseFloat, a -> (a > -589));
         ioManager.writeMessage("Введите координату y: ");
@@ -60,24 +70,27 @@ public class ModelBuilder {
         return new Location(x, y, z);
     }
 
-    public Person handlePerson() {
+    /** Метод, создающий объект класса Person по вводу пользователя.*/
+    public Person buildPerson() {
         ioManager.writeMessage("Введите имя человека: ");
         String name = ioManager.getRawInput();
         ioManager.writeMessage("Введите рост человека: ");
         int height = ioManager.getValidDigit(Integer::parseInt, a -> (a > 0));
         ioManager.writeMessage("Введите цвет глаз человека: ");
-        Color eyeColor = handleEnum(Color.BLACK, false);
+        Color eyeColor = buildEnum(Color.BLACK, false);
         ioManager.writeMessage("Введите цвет волос человека: ");
-        Color hairColor = handleEnum(Color.BLACK, false);
+        Color hairColor = buildEnum(Color.BLACK, false);
         ioManager.writeMessage("Введите национальность человека: ");
-        Country nationality = handleEnum(Country.CHINA, false);
+        Country nationality = buildEnum(Country.CHINA, false);
         ioManager.writeMessage("Введите локацию: ");
-        Location location = handleLocation();
+        Location location = buildLocation();
 
         return new Person(name, height, eyeColor, hairColor, nationality, location);
 
     }
-    public Coordinates handleCoordinates() {
+
+    /** Метод, создающий объект класса Coordinates по вводу пользователя.*/
+    public Coordinates buildCoordinates() {
         ioManager.writeMessage("Введите координату x: ");
         float x = ioManager.getValidDigit(Float::parseFloat, a -> (a > -589));
         ioManager.writeMessage("Введите координату y: ");
@@ -85,7 +98,8 @@ public class ModelBuilder {
         return new Coordinates(x, y);
     }
 
-    private <T extends Enum<T>> T handleEnum(T enumClass, boolean canBeNull){
+    /** Параметризованный метод, получающий объект какого-либо Enum по вводу пользователя.*/
+    private <T extends Enum<T>> T buildEnum(T enumClass, boolean canBeNull){
         ArrayList<String> constants = new ArrayList<>();
         for (Enum<?> enumeration : enumClass.getDeclaringClass().getEnumConstants()){
             ioManager.writeMessage(enumeration + " ");

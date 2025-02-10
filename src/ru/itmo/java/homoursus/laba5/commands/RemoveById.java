@@ -6,6 +6,11 @@ import ru.itmo.java.homoursus.laba5.model.Dragon;
 
 import java.util.LinkedList;
 
+/**
+ * Класс команды, реализующий удаление элемента коллекции по его id.
+ * @author Homoursus
+ * @version 1.0
+ */
 public class RemoveById implements ICommand{
     @Override
     public String getDescription() {
