@@ -4,7 +4,7 @@ import ru.itmo.java.homoursus.laba5.model.modelEnums.DragonCharacter;
 import ru.itmo.java.homoursus.laba5.model.modelEnums.DragonType;
 
 /**
- * Record, хранящий дракона. Он содержится в коллекции реализует интерфейс Comparable.
+ * Record, хранящий дракона. Он содержится в коллекции. Реализует интерфейс Comparable.
  * @param age Значение должно быть больше 0
  * @param coordinates Не может быть null
  * @param creationDate Не может быть null, Значение этого поля должно генерироваться автоматически
@@ -20,7 +20,7 @@ public record Dragon(String name, Coordinates coordinates, long age, String desc
                      DragonType dragonType, DragonCharacter dragonCharacter, Person killer,
                      long id, java.time.ZonedDateTime creationDate) implements Comparable<Dragon> {
 
-    /** Генератор id (генерирует просто последовательные числа, начиная с последнего использованного.*/
+    /** Генератор id генерирует просто последовательные числа, начиная с последнего использованного.*/
     private static long idGenerator = 1;
 
     public Dragon(String name, Coordinates coordinates, long age, String description,

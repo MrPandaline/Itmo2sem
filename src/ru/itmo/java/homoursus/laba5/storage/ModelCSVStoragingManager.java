@@ -17,7 +17,7 @@ import java.util.LinkedList;
 /**
  * Класс, управляющий записью (чтением) коллекции в .csv файл по пути <b>path</b> (из файла).
  * @author Homoursus
- * @version 1.0
+ * @version 1.0.1
  */
 public class ModelCSVStoragingManager implements IModelStorageManager {
     /** Путь до файла, в который (из которого) будет происходить запись (чтение) коллекции.*/
@@ -49,7 +49,7 @@ public class ModelCSVStoragingManager implements IModelStorageManager {
                     osw.write("null"+ SEPARATOR);
                 }
                 osw.write(dragon.dragonCharacter().toString() + SEPARATOR);
-                if (dragon.dragonType() != null) {
+                if (dragon.killer() != null) {
                     osw.write(dragon.killer().name() + SEPARATOR);
                     osw.write(String.valueOf(dragon.killer().height()) + SEPARATOR);
                     osw.write(dragon.killer().eyeColor().toString() + SEPARATOR);

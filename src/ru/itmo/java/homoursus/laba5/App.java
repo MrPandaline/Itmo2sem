@@ -120,7 +120,7 @@ public class App {
                 cmd.execute(this, args);
                 this.lastUsedCommands.add(userInput);
             }
-            catch(CommandNotFound | NullPointerException e) {
+            catch(CommandNotFound e) {
                 System.out.println("Команда не найдена! Введите help для получения списка доступных комманд");
             }
         }
