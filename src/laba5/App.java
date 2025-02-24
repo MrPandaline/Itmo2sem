@@ -120,11 +120,9 @@ public class App {
         ioManager.writeMessage("Введите help для получения списка доступных команд.\n");
         lastSessionUserInput = lastSessionUserInputStoragingManager.readFromStorage(ioManager);
         if (!lastSessionUserInput.isEmpty()){
-            ioManager.writeMessage("""
-                    Последняя сессия была завершена некорректно. Хотите вернуться к ней?
-                    да - вернуться к старой сессии
-                    какой-либо другой набор символов - запустить новую сессию\s
-                    """);
+            ioManager.writeMessage("Последняя сессия была завершена некорректно. Хотите вернуться к ней?\n"+
+                    "да - вернуться к старой сессии\n"+
+                    "какой-либо другой набор символов - запустить новую сессию\n");
             String answer = ioManager.getRawInput();
             if (answer != null && answer.equalsIgnoreCase("да")){
                 ioManager.addCommandsToSimulator(lastSessionUserInput);

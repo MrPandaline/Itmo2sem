@@ -45,11 +45,11 @@ public class ModelBuilder {
         DragonType dragonType = buildEnum(DragonType.FIRE, true);
         ioManager.writeMessage("Выберите характер дракона: \n");
         DragonCharacter dragonCharacter = buildEnum(DragonCharacter.EVIL, false);
-        ioManager.writeMessage("""
-                Вы хотите добавить убийцу дракона?\s
-                да - перейти к добавлению,
-                какой-либо другой набор символов - пропустить добавление\s
-                """);
+        ioManager.writeMessage(
+                "Вы хотите добавить убийцу дракона?\n"+
+                "да - перейти к добавлению,\n"+
+                "какой-либо другой набор символов - пропустить добавление\n"
+                );
         String nullKillerFlag = ioManager.getRawInput();
         Person killer;
         if (nullKillerFlag != null && nullKillerFlag.equals("да")) {
