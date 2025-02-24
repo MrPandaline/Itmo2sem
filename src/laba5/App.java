@@ -61,7 +61,7 @@ public class App {
     /**
      *
      */
-    private final CommandsListStoragingManager emergencyCommandsStoragingManager;
+    private final CommandsListStoragingManager lastSessionUserInputStoragingManager;
 
     {
         isAppWorking = true;
@@ -78,7 +78,7 @@ public class App {
         this.storageManager = storageManager;
         this.lastUsedCommands = new CommandsListStoragingManager(commandsFileName).readFromStorage(ioManager);
         this.commandsFileName = commandsFileName;
-        this.emergencyCommandsStoragingManager = new CommandsListStoragingManager(emergencyFileName);
+        this.lastSessionUserInputStoragingManager = new CommandsListStoragingManager(emergencyFileName);
         this.collectionManager = new CollectionManager<>(new LinkedList<>());
 
         Dragon.setIdGenerator(storageManager.getNextID(ioManager));
@@ -115,21 +115,25 @@ public class App {
      * Метод, запускающий приложение.
      */
     public void run(){
-        String userInput = "";
+        String userInput;
+        ArrayList<String> lastSessionUserInput;
         ioManager.writeMessage("Введите help для получения списка доступных команд.\n");
-        ArrayList<String> lastCommands = emergencyCommandsStoragingManager.readFromStorage(ioManager);
-        if (!lastCommands.isEmpty()){
-            ioManager.writeMessage("Последняя сессия была завершена некорректно. Хотите вернуться к ней?\n" +
-                    "да - вернуться к старой сессии\n" +
-                    "какой-либо другой набор символов - запустить новую сессию \n");
+        lastSessionUserInput = ioManager.getLastSessionUserInput();
+        if (!lastSessionUserInput.isEmpty()){
+            ioManager.writeMessage("""
+                    Последняя сессия была завершена некорректно. Хотите вернуться к ней?
+                    да - вернуться к старой сессии
+                    какой-либо другой набор символов - запустить новую сессию\s
+                    """);
             String answer = ioManager.getRawInput();
             if (answer != null && answer.equalsIgnoreCase("да")){
-                ioManager.addCommandsToSimulator(lastCommands);
+                ioManager.addCommandsToSimulator(lastSessionUserInput);
             }
         }
         while (isAppWorking) {
             try{
-            String[] splittedInput;
+                lastSessionUserInput = ioManager.getLastSessionUserInput();
+                String[] splittedInput;
 
                 userInput = ioManager.getRawInput().toLowerCase();
                 splittedInput = userInput.split(" ");
@@ -141,7 +145,7 @@ public class App {
                 commandManager.execute(this ,splittedInput[0] ,args);
                 this.lastUsedCommands.add(splittedInput[0]);
             }
-            catch(CommandNotFound e) {
+            catch(CommandNotFound | NullPointerException e) {
                 ioManager.writeMessage("Команда не найдена! Введите help для получения списка доступных команд.\n");
             }
             catch (NumberFormatException e) {
@@ -149,56 +153,45 @@ public class App {
             }
             catch (Exception e){
                 ioManager.writeMessage("Произошла непредвиденная ошибка! Отправьте создателю файл краш-репорт!\n");
-                StringBuilder stackTraceBuilder = new StringBuilder();
-
-                stackTraceBuilder.append(e).append("\n");
-
-                for (StackTraceElement element : e.getStackTrace()) {
-                    stackTraceBuilder.append("\tat ").append(element).append("\n");
-                }
-                String stackTrace = stackTraceBuilder.toString();
-                lastCommands.add(stackTrace);
-
                 try {
-                    OnCrashStorageWriter.write(lastUsedCommands);
+                    OnCrashStorageWriter.write(lastSessionUserInput, e);
                 } catch (IOException e1) {
                     ioManager.writeMessage("Произошла ошибка при записи краш-репорта!\n");
                 }
             }
-
         }
     }
 
     /**
-     * @return используемый менеджер управления коллекцией.
+     * Метод, возвращающий используемый менеджер управления коллекцией.
      * */
     public CollectionManager<Dragon> getCollectionManager() {
         return collectionManager;
     }
 
     /**
-     * @return используемый менеджер управления командами.
+     * Метод, возвращающий используемый менеджер управления командами.
      * */
     public CommandManager getCommandManager() {
         return commandManager;
     }
 
     /**
-     * @return используемый менеджер управления вводом-выводом.
+     * Метод, возвращающий используемый менеджер управления вводом-выводом.
      * */
     public IIOManager getIoManager() {
         return ioManager;
     }
 
     /**
-     * @return используемый менеджер управления командами.
+     * Метод, возвращающий используемый менеджер управления командами.
      * */
     public IModelStorageManager getStorageManager() {
         return storageManager;
     }
 
     /**
-     * @return ArrayList последних использованных команд.
+     * Метод, возвращающий ArrayList последних использованных команд.
      */
     public ArrayList<String> getLastUsedCommands() {
         return lastUsedCommands;
@@ -209,7 +202,7 @@ public class App {
      */
     public void turnOffApp(){
         new CommandsListStoragingManager(commandsFileName).writeToStorage(lastUsedCommands, true);
-        emergencyCommandsStoragingManager.writeToStorage(new ArrayList<>(), false);
+        lastSessionUserInputStoragingManager.writeToStorage(new ArrayList<>(), false);
         isAppWorking = false;
     }
 }

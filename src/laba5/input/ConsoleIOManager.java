@@ -24,12 +24,12 @@ public class ConsoleIOManager implements IIOManager {
      * Список команд, введённых пользователем, за время работы приложения.
      * Необходимы для восстановления работы после экстренного закрытия приложения.
      * */
-    private final ArrayList<String> emergencyCommandsList;
+    private final ArrayList<String> lastSessionUserInput;
 
     private ArrayList<String> emulatorBuffer;
 
     {
-        emergencyCommandsList = new ArrayList<>();
+        lastSessionUserInput = new ArrayList<>();
         emulatorBuffer = new ArrayList<>();
     }
 
@@ -40,23 +40,22 @@ public class ConsoleIOManager implements IIOManager {
     public String getRawInput(){
         String input = "";
         try {
-            if (emulatorBuffer.isEmpty()) {
-                input = this.reader.readLine();
-                emergencyCommandsList.add(input);
-                if (input.isEmpty()) {
-                    input = null;
-                }
-            }
-            else {
+            if (!emulatorBuffer.isEmpty()) {
                 input = emulatorBuffer.remove(0);
-                emergencyCommandsList.add(input);
-                writeMessage(input+"\n");
+                writeMessage(input + "\n");
             }
-        }
-        catch (IOException e) {
+            else{
+                input = this.reader.readLine();
+                }
+            lastSessionUserInput.add(input);
+            if (input.isEmpty()) {
+                input = null;
+            }
+
+        } catch (IOException e) {
             writeMessage("Что-то пошло не так...\n");
         }
-        commandStoraging.writeToStorage(emergencyCommandsList, false);
+        commandStoraging.writeToStorage(lastSessionUserInput, false);
         return input;
     }
 
@@ -137,5 +136,10 @@ public class ConsoleIOManager implements IIOManager {
     @Override
     public void addCommandsToSimulator(ArrayList<String> commands) {
         emulatorBuffer = commands;
+    }
+
+    @Override
+    public ArrayList<String> getLastSessionUserInput(){
+        return lastSessionUserInput;
     }
 }

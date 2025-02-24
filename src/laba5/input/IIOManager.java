@@ -58,5 +58,11 @@ public interface IIOManager {
      * @param commands список команд с аргументами, который необходимо последовательно вызвать.
      */
     void addCommandsToSimulator(ArrayList<String> commands);
+
+    /**
+     * Метод, возвращающий ArrayList, который содержит ввод пользователя за последнюю сессию.
+     */
+    ArrayList<String> getLastSessionUserInput();
+
 }
 
