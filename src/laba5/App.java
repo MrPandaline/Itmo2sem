@@ -118,7 +118,7 @@ public class App {
         String userInput;
         ArrayList<String> lastSessionUserInput;
         ioManager.writeMessage("Введите help для получения списка доступных команд.\n");
-        lastSessionUserInput = ioManager.getLastSessionUserInput();
+        lastSessionUserInput = lastSessionUserInputStoragingManager.readFromStorage(ioManager);
         if (!lastSessionUserInput.isEmpty()){
             ioManager.writeMessage("""
                     Последняя сессия была завершена некорректно. Хотите вернуться к ней?

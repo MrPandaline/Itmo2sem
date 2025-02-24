@@ -37,17 +37,19 @@ public class ModelBuilder {
         String name = ioManager.getValidRawInput(a -> (a != null));
         ioManager.writeMessage("Введите координаты дракона: \n" );
         Coordinates coordinates = buildCoordinates();
-        ioManager.writeMessage("Введите возраст дракона: ");
-        long age = ioManager.getValidDigit(Long::parseLong, a -> (a > 0));
+        ioManager.writeMessage("Введите возраст дракона (целое число)\nЗначение должно быть в диапазоне (0; 10^6): ");
+        long age = ioManager.getValidDigit(Long::parseLong, a -> (a > 0 && a < 1000000 ));
         ioManager.writeMessage("Введите описание дракона (можно оставить пустым): ");
         String description = ioManager.getRawInput();
         ioManager.writeMessage("Выберите тип дракона (можно оставить пусты): \n");
         DragonType dragonType = buildEnum(DragonType.FIRE, true);
         ioManager.writeMessage("Выберите характер дракона: \n");
         DragonCharacter dragonCharacter = buildEnum(DragonCharacter.EVIL, false);
-        ioManager.writeMessage("Вы хотите добавить убийцу дракона? \n" +
-                "да - перейти к добавлению,\n" +
-                "какой-либо другой набор символов - пропустить добавление \n");
+        ioManager.writeMessage("""
+                Вы хотите добавить убийцу дракона?\s
+                да - перейти к добавлению,
+                какой-либо другой набор символов - пропустить добавление\s
+                """);
         String nullKillerFlag = ioManager.getRawInput();
         Person killer;
         if (nullKillerFlag != null && nullKillerFlag.equals("да")) {
@@ -62,11 +64,11 @@ public class ModelBuilder {
 
     /** Метод, создающий объект класса Location по вводу пользователя.*/
     public Location buildLocation() {
-        ioManager.writeMessage("Введите координату x: ");
+        ioManager.writeMessage("Введите координату x (дробное число). Значение должно быть больше -589: ");
         float x = ioManager.getValidDigit(Float::parseFloat, a -> (a > -589));
-        ioManager.writeMessage("Введите координату y: ");
+        ioManager.writeMessage("Введите координату y (дробное число): ");
         double y = ioManager.getDigit(Double::parseDouble);
-        ioManager.writeMessage("Введите координату z: ");
+        ioManager.writeMessage("Введите координату z (дробное число): ");
         Integer z = ioManager.getDigit(Integer::parseInt);
         return new Location(x, y, z);
     }
@@ -75,8 +77,8 @@ public class ModelBuilder {
     public Person buildPerson() {
         ioManager.writeMessage("Введите имя человека: ");
         String name = ioManager.getRawInput();
-        ioManager.writeMessage("Введите рост человека: ");
-        int height = ioManager.getValidDigit(Integer::parseInt, a -> (a > 0));
+        ioManager.writeMessage("Введите рост человека в мм (целое число): ");
+        int height = ioManager.getValidDigit(Integer::parseInt, a -> (a > 0 && a < 3000));
         ioManager.writeMessage("Введите цвет глаз человека: ");
         Color eyeColor = buildEnum(Color.BLACK, false);
         ioManager.writeMessage("Введите цвет волос человека: ");
@@ -92,9 +94,9 @@ public class ModelBuilder {
 
     /** Метод, создающий объект класса Coordinates по вводу пользователя.*/
     public Coordinates buildCoordinates() {
-        ioManager.writeMessage("Введите координату x: ");
+        ioManager.writeMessage("Введите координату x (дробное число). Значение должно быть больше -589: ");
         float x = ioManager.getValidDigit(Float::parseFloat, a -> (a > -589));
-        ioManager.writeMessage("Введите координату y: ");
+        ioManager.writeMessage("Введите координату y (целое число): ");
         int y = ioManager.getDigit(Integer::parseInt);
         return new Coordinates(x, y);
     }
