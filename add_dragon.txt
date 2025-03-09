@@ -1,0 +1,10 @@
+add
+test
+534
+3
+12
+
+WATER
+EVIL
+
+execute_script commands.txt
