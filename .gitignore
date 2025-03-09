@@ -27,3 +27,8 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+/.idea/compiler.xml
+/src/main/java/laba5/Draft.java
+/.idea/jarRepositories.xml
+/test.csv
+/target/
