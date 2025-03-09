@@ -1,0 +1,4 @@
+remove_head
+hist
+
+execute_script add_dragon.txt
