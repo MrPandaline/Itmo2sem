@@ -28,7 +28,9 @@ bin/
 ### Mac OS ###
 .DS_Store
 /.idea/compiler.xml
-/src/main/java/laba5/Draft.java
+/src/main/java/laba5/KeyInterceptor.java
 /.idea/jarRepositories.xml
 /test.csv
 /target/
+/src/main/java/laba5/misc/CamelToSnakeCaseConverter.java
+/src/main/java/laba5/misc/ReflectionParser.java

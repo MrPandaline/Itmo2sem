@@ -42,7 +42,6 @@ public class Main {
           IIOManager ioManager = new ConsoleIOManager(new BufferedReader(new InputStreamReader(System.in)), emergencyCommands);
           IModelStorageManager storageManager = new ModelCSVStoragingManager(args[0]);
           App app = new App(storageManager, ioManager, "commandsFileName.csv", emergencyCommands);
-
           app.run();
       }
   }

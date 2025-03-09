@@ -1,6 +1,9 @@
 package laba5.input;
 
 import laba5.storage.CommandsListStoragingManager;
+import org.jline.reader.*;
+import org.jline.terminal.Terminal;
+import org.jline.terminal.TerminalBuilder;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -9,59 +12,65 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
- * Класс реализующий модуль ввода-вывода через консоль.
+ * Класс реализующий модуль ввода-вывода через консоль с поддержкой истории команд.
  * @author Homoursus
- * @version 1.0
+ * @version 2.0
  */
 public class ConsoleIOManager implements IIOManager {
-    BufferedReader reader;
-    /**
-     * Название файла, в котором будут храниться все использованные в течение последней сессии команды.
-     * */
-    CommandsListStoragingManager commandStoraging;
-
-    /**
-     * Список команд, введённых пользователем, за время работы приложения.
-     * Необходимы для восстановления работы после экстренного закрытия приложения.
-     * */
+    private final LineReader lineReader;
+    private final Terminal terminal;
+    private final CommandsListStoragingManager commandStoraging;
     private final ArrayList<String> lastSessionUserInput;
-
     private ArrayList<String> emulatorBuffer;
-
     private boolean isUsingAutomatedInputNow;
 
-    {
-        lastSessionUserInput = new ArrayList<>();
-        emulatorBuffer = new ArrayList<>();
+    public ConsoleIOManager(BufferedReader reader, String emergencyFileName) {
+        this.lastSessionUserInput = new ArrayList<>();
+        this.emulatorBuffer = new ArrayList<>();
+        this.commandStoraging = new CommandsListStoragingManager(emergencyFileName);
+        
+        try {
+            this.terminal = TerminalBuilder.builder()
+                    .system(true)
+                    .build();
+            
+            this.lineReader = LineReaderBuilder.builder()
+                    .terminal(terminal)
+                    .variable(LineReader.HISTORY_FILE, System.getProperty("user.home") + "/.laba5_history")
+                    .variable(LineReader.HISTORY_SIZE, 100)
+                    .option(LineReader.Option.HISTORY_BEEP, false)
+                    .option(LineReader.Option.HISTORY_IGNORE_SPACE, true)
+                    .build();
+        } catch (IOException e) {
+            throw new RuntimeException("Не удалось инициализировать терминал: " + e.getMessage());
+        }
     }
 
-    public ConsoleIOManager(BufferedReader reader, String emergencyFileName) {
-        this.reader = reader;
-        commandStoraging = new CommandsListStoragingManager(emergencyFileName);
-    }
-    public String getRawInput(){
+    public String getRawInput() {
         String input = "";
         try {
             if (!emulatorBuffer.isEmpty()) {
                 isUsingAutomatedInputNow = true;
                 input = emulatorBuffer.remove(0);
-                //writeMessage(input + "\n");
-            }
-            else{
+            } else {
                 isUsingAutomatedInputNow = false;
-                input = this.reader.readLine();
+                input = lineReader.readLine("> ");
             }
 
-            lastSessionUserInput.add(input);
-
-            if (input.isEmpty()) {
-                input = null;
+            if (input != null && !input.trim().isEmpty()) {
+                lastSessionUserInput.add(input);
+                commandStoraging.writeToStorage(lastSessionUserInput, false);
             }
-        } catch (IOException e) {
-            writeMessage("Что-то пошло не так...\n", false);
+
+        } catch (UserInterruptException e) {
+            // Ctrl+C
+            return null;
+        } catch (EndOfFileException e) {
+            // Ctrl+D
+            return null;
         }
-        commandStoraging.writeToStorage(lastSessionUserInput, false);
-        return input;
+        
+        return input.isEmpty() ? null : input;
     }
 
     @Override
