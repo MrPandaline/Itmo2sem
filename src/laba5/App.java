@@ -12,6 +12,7 @@ import laba5.storage.OnCrashStorageWriter;
 
 import java.io.IOException;
 import java.util.*;
+import java.awt.event.KeyListener;
 
 /**
  * Класс, объединяющий все модули приложения.
@@ -117,12 +118,11 @@ public class App {
     public void run(){
         String userInput;
         ArrayList<String> lastSessionUserInput;
-        ioManager.writeMessage("Введите help для получения списка доступных команд.\n");
+        ioManager.writeMessage("Введите help для получения списка доступных команд.\n", false);
         lastSessionUserInput = lastSessionUserInputStoragingManager.readFromStorage(ioManager);
         if (!lastSessionUserInput.isEmpty()){
             ioManager.writeMessage("Последняя сессия была завершена некорректно. Хотите вернуться к ней?\n"+
-                    "да - вернуться к старой сессии\n"+
-                    "какой-либо другой набор символов - запустить новую сессию\n");
+                    "да - вернуться к старой сессии\n"+ "какой-либо другой набор символов - запустить новую сессию\n", false);
             String answer = ioManager.getRawInput();
             if (answer != null && answer.equalsIgnoreCase("да")){
                 ioManager.addCommandsToSimulator(lastSessionUserInput);
@@ -136,6 +136,8 @@ public class App {
                 userInput = ioManager.getRawInput().toLowerCase();
                 splittedInput = userInput.split(" ");
 
+                //KeyListener keyListener = new KeyListener(
+
                 String[] args = new String[splittedInput.length - 1];
                 if( args.length != 0) {
                     System.arraycopy(splittedInput, 1, args, 0, args.length);
@@ -144,17 +146,17 @@ public class App {
                 this.lastUsedCommands.add(splittedInput[0]);
             }
             catch(CommandNotFound | NullPointerException e) {
-                ioManager.writeMessage("Команда не найдена! Введите help для получения списка доступных команд.\n");
+                ioManager.writeMessage("Команда не найдена! Введите help для получения списка доступных команд.\n", false);
             }
             catch (NumberFormatException e) {
-                ioManager.writeMessage("Неверный ввод числового параметра!\n");
+                ioManager.writeMessage("Неверный ввод числового параметра!\n", false);
             }
             catch (Exception e){
-                ioManager.writeMessage("Произошла непредвиденная ошибка! Отправьте создателю файл краш-репорт!\n");
+                ioManager.writeMessage("Произошла непредвиденная ошибка! Отправьте создателю файл краш-репорт!\n", false);
                 try {
                     OnCrashStorageWriter.write(lastSessionUserInput, e);
                 } catch (IOException e1) {
-                    ioManager.writeMessage("Произошла ошибка при записи краш-репорта!\n");
+                    ioManager.writeMessage("Произошла ошибка при записи краш-репорта!\n", false);
                 }
             }
         }

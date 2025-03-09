@@ -2,6 +2,7 @@ package laba5.commands;
 
 import laba5.App;
 import laba5.logic.ModelBuilder;
+import laba5.model.AbstractModel;
 import laba5.model.Dragon;
 
 /**
@@ -10,6 +11,7 @@ import laba5.model.Dragon;
  * @version 1.0
  */
 public class Add implements ICommand {
+
     @Override
     public String getDescription() {
         return "Добавить новый элемент в коллекцию";

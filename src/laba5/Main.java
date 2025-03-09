@@ -8,6 +8,8 @@ import laba5.storage.IModelStorageManager;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
+
+
 /**
  * Требования:
  * Паттерн команда

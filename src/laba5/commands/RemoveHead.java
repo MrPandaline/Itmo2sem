@@ -23,10 +23,10 @@ public class RemoveHead implements ICommand{
         IIOManager ioManager = app.getIoManager();
         Dragon dragon = linkedList.poll();
         if (dragon != null) {
-            ioManager.writeMessage("Первый элемент коллекции: \n" + linkedList.poll() + "\n");
+            ioManager.writeMessage("Первый элемент коллекции: \n" + dragon + "\n", outInQuiteMode);
         }
         else{
-            ioManager.writeMessage("Коллекция пуста! Введите add для добавления нового элемента.");
+            ioManager.writeMessage("Коллекция пуста! Введите add для добавления нового элемента.", outInQuiteMode);
         }
     }
 }

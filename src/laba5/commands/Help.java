@@ -13,7 +13,6 @@ public class Help implements ICommand{
     public String getDescription() {
         return "Вывести справку по доступным командам";
     }
-
     @Override
     public void execute(App app, String[] args) {
         IIOManager ioManager = app.getIoManager();
@@ -21,9 +20,9 @@ public class Help implements ICommand{
         String[] commandsNames = app.getCommandManager().getCommandNames();
         final String SEPARATOR = "-----------------------------------------------------------------------\n";
         for (int i = 0; i < commands.length; i++){
-            ioManager.writeMessage(SEPARATOR);
-            ioManager.writeMessage(commandsNames[i] + "\n"+ commands[i].getDescription() + "\n");
+            ioManager.writeMessage(SEPARATOR, outInQuiteMode);
+            ioManager.writeMessage(commandsNames[i] + "\n"+ commands[i].getDescription() + "\n", outInQuiteMode);
         }
-        ioManager.writeMessage(SEPARATOR);
+        ioManager.writeMessage(SEPARATOR, outInQuiteMode);
     }
 }

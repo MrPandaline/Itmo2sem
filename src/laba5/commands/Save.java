@@ -22,6 +22,6 @@ public class Save implements ICommand{
         LinkedList<Dragon> collection = app.getCollectionManager().getCollection();
         IModelStorageManager storageManager = app.getStorageManager();
         storageManager.writeToStorage(collection);
-        app.getIoManager().writeMessage("Коллекция сохранена в файл! \n");
+        app.getIoManager().writeMessage("Коллекция сохранена в файл! \n", outInQuiteMode);
     }
 }

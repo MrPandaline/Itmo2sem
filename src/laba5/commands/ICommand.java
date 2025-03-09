@@ -12,6 +12,9 @@ public interface ICommand {
      * Метод получения описания команды
      * @return возвращает описание команды
      */
+
+    boolean outInQuiteMode = true;
+
     String getDescription();
 
     /**

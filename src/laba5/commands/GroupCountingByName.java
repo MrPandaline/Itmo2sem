@@ -15,6 +15,7 @@ import java.util.LinkedList;
  * @version 1.0
  */
 public class GroupCountingByName implements ICommand{
+
     @Override
     public String getDescription() {
         return "Сгруппировать элементы коллекции по значению поля name, \nВывести количество элементов в каждой группе";
@@ -37,7 +38,7 @@ public class GroupCountingByName implements ICommand{
             }
         }
         for (String name : countMap.keySet()) {
-            ioManager.writeMessage("Элементов коллекции с именем " + name + ": " + countMap.get(name) + "\n");
+            ioManager.writeMessage("Элементов коллекции с именем " + name + ": " + countMap.get(name) + "\n", outInQuiteMode);
         }
     }
 }

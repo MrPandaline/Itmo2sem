@@ -18,6 +18,6 @@ public class Clear implements ICommand{
     @Override
     public void execute(App app, String[] args) {
         app.getCollectionManager().setCollection(new LinkedList<>());
-        app.getIoManager().writeMessage("Коллекция очищена!");
+        app.getIoManager().writeMessage("Коллекция очищена!", outInQuiteMode);
     }
 }

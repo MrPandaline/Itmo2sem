@@ -15,6 +15,7 @@ import java.util.LinkedList;
  * @version 1.0.1
  */
 public class FilterGreaterThanType implements ICommand{
+
     @Override
     public String getDescription() {
         return "Вывести элементы, значение поля type которых, больше заданного\n" +
@@ -36,11 +37,11 @@ public class FilterGreaterThanType implements ICommand{
                 for (Dragon dragon : linkedList) {
                     if (dragon.dragonType().compareTo(dragonType) > 0) {
                         flag = true;
-                        ioManager.writeMessage(dragon + "\n");
+                        ioManager.writeMessage(dragon + "\n", true);
                     }
                 }
                 if (!flag) {
-                    ioManager.writeMessage("Нет элементов коллекции, чьё значение пол type превышает заданное!\n");
+                    ioManager.writeMessage("Нет элементов коллекции, чьё значение пол type превышает заданное!\n", true);
                 }
                 Collections.sort(linkedList);
             }
@@ -51,12 +52,12 @@ public class FilterGreaterThanType implements ICommand{
         }
     }
     private void annotate(IIOManager ioManager) {
-        ioManager.writeMessage("Вы не верно ввели значение поля type! \n");
+        ioManager.writeMessage("Вы не верно ввели значение поля type! \n", outInQuiteMode);
 
-        ioManager.writeMessage("Доступные типы: " );
+        ioManager.writeMessage("Доступные типы: " , outInQuiteMode);
         for (DragonType dragonType : DragonType.values()) {
-            ioManager.writeMessage(dragonType.toString() + " ");
+            ioManager.writeMessage(dragonType.toString() + " ", outInQuiteMode);
         }
-        ioManager.writeMessage("\n");
+        ioManager.writeMessage("\n", outInQuiteMode);
     }
 }

@@ -25,6 +25,6 @@ public class RemoveGreater implements ICommand{
         LinkedList<Dragon> linkedList = app.getCollectionManager().getCollection();
         Dragon curDragon = new ModelBuilder(ioManager).buildDragon();
         linkedList.removeIf(dragon -> curDragon.compareTo(dragon) < 0);
-        ioManager.writeMessage("Элементы большие, чем введённый, удалены.");
+        ioManager.writeMessage("Элементы большие, чем введённый, удалены.", outInQuiteMode);
     }
 }

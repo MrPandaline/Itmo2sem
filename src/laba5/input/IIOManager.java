@@ -7,7 +7,7 @@ import java.util.function.Predicate;
 /**
  * Интерфейс, декларирующий методы, модуля ввода-вывода.
  * @author Homoursus
- * @version 1.0
+ * @version 1.0.1
  */
 public interface IIOManager {
 
@@ -24,8 +24,11 @@ public interface IIOManager {
      */
     String getValidRawInput(Predicate<String> condition);
 
-    /** Вывод сообщения*/
-    void writeMessage(String message);
+    /** Вывод сообщения
+     * @param message Сообщение, которое необходимо вывести.
+     * @param willBeInQuiteMode Флаг, показывающий, будет ли выведено сообщение в тихом режиме.
+     * */
+    void writeMessage(String message, boolean willBeInQuiteMode);
 
     /**
      * Параметризованный метод, получающий число, введённое пользователем.
@@ -64,5 +67,9 @@ public interface IIOManager {
      */
     ArrayList<String> getLastSessionUserInput();
 
+    /**
+     * Метод, возвращающий значение флага. Используется ли сейчас автоматизированный ввод из буфера
+     */
+    boolean isUsingAutomatedInputNow();
 }
 

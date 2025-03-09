@@ -28,6 +28,8 @@ public class ConsoleIOManager implements IIOManager {
 
     private ArrayList<String> emulatorBuffer;
 
+    private boolean isUsingAutomatedInputNow;
+
     {
         lastSessionUserInput = new ArrayList<>();
         emulatorBuffer = new ArrayList<>();
@@ -41,19 +43,22 @@ public class ConsoleIOManager implements IIOManager {
         String input = "";
         try {
             if (!emulatorBuffer.isEmpty()) {
+                isUsingAutomatedInputNow = true;
                 input = emulatorBuffer.remove(0);
-                writeMessage(input + "\n");
+                //writeMessage(input + "\n");
             }
             else{
+                isUsingAutomatedInputNow = false;
                 input = this.reader.readLine();
-                }
+            }
+
             lastSessionUserInput.add(input);
+
             if (input.isEmpty()) {
                 input = null;
             }
-
         } catch (IOException e) {
-            writeMessage("Что-то пошло не так...\n");
+            writeMessage("Что-то пошло не так...\n", false);
         }
         commandStoraging.writeToStorage(lastSessionUserInput, false);
         return input;
@@ -68,7 +73,7 @@ public class ConsoleIOManager implements IIOManager {
                 input = testInput;
             }
             else {
-                writeMessage("Некорректный ввод! Попробуйте ещё раз.\n");
+                writeMessage("Некорректный ввод! Попробуйте ещё раз.\n", false);
             }
         }
         return input;
@@ -83,7 +88,7 @@ public class ConsoleIOManager implements IIOManager {
                 input = testInput;
             }
             else {
-                writeMessage("Некорректный ввод! Попробуйте ещё раз.\n");
+                writeMessage("Некорректный ввод! Попробуйте ещё раз.\n", false);
             }
         }
         return input;
@@ -110,7 +115,7 @@ public class ConsoleIOManager implements IIOManager {
                 }
             }
             if (input.isEmpty()){
-                writeMessage("Некорректный ввод! Попробуйте ещё раз.\n");
+                writeMessage("Некорректный ввод! Попробуйте ещё раз.\n", false);
             }
         }
         return input;
@@ -123,14 +128,16 @@ public class ConsoleIOManager implements IIOManager {
             try {
                 result = function.apply(getRawInput());
             } catch (NumberFormatException | NullPointerException e) {
-                writeMessage("Неверно введено число! Повторите ввод.\n");
+                writeMessage("Неверно введено число! Повторите ввод.\n", false);
             }
         }
         return result;
     }
 
-    public void writeMessage(String message){
-        System.out.print(message);
+    public void writeMessage(String message, boolean willBeInQuiteMode){
+        if (!isUsingAutomatedInputNow || willBeInQuiteMode) {
+            System.out.print(message);
+        }
     }
 
     @Override
@@ -141,5 +148,9 @@ public class ConsoleIOManager implements IIOManager {
     @Override
     public ArrayList<String> getLastSessionUserInput(){
         return lastSessionUserInput;
+    }
+
+    public boolean isUsingAutomatedInputNow(){
+        return isUsingAutomatedInputNow;
     }
 }

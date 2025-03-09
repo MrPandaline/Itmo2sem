@@ -17,6 +17,8 @@ public class PrintFieldDescendingKiller implements ICommand {
         return "Вывести значения поля killer всех элементов в порядке убывания";
     }
 
+
+
     @Override
     public void execute(App app, String[] args) {
         LinkedList<Dragon> collection = app.getCollectionManager().getCollection();
@@ -30,8 +32,8 @@ public class PrintFieldDescendingKiller implements ICommand {
             });
         for (Dragon dragon : collection) {
             if (dragon.killer() != null) {
-                app.getIoManager().writeMessage(dragon.killer().toString() + "\n");
-                app.getIoManager().writeMessage("\n");
+                app.getIoManager().writeMessage(dragon.killer().toString() + "\n", outInQuiteMode);
+                app.getIoManager().writeMessage("\n", outInQuiteMode);
             }
         }
         Collections.sort(collection);

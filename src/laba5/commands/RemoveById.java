@@ -22,14 +22,14 @@ public class RemoveById implements ICommand{
         IIOManager ioManager = app.getIoManager();
         LinkedList<Dragon> linkedList = app.getCollectionManager().getCollection();
         if (args.length == 0) {
-            ioManager.writeMessage("Вы не ввели id элемента коллекции!\n");
+            ioManager.writeMessage("Вы не ввели id элемента коллекции!\n", false);
         } else {
             int id = Integer.parseInt(args[0]);
             if (linkedList.removeIf(dragon -> dragon.id() == id)) {
-                ioManager.writeMessage("Элемент коллекции удалён!\n");
+                ioManager.writeMessage("Элемент коллекции удалён!\n", outInQuiteMode);
             }
             else {
-                ioManager.writeMessage("Нет элементов коллекции с таким индексом!\n");
+                ioManager.writeMessage("Нет элементов коллекции с таким индексом!\n", outInQuiteMode);
             }
         }
     }

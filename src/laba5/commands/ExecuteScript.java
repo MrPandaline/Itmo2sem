@@ -2,20 +2,23 @@ package laba5.commands;
 
 import laba5.App;
 import laba5.exceptions.CommandNotFound;
+import laba5.input.IIOManager;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 
 /**
  * Класс команды, реализующей выполнение скрипта из файла. Название файла передаётся вместе с командой.
  * Расширение файла .txt
  * Каждая команда вместе с аргументами должна быть указана с новой строки.
  * @author Homoursus
- * @version 1.0
+ * @version 1.1
  */
 public class ExecuteScript implements ICommand{
+
     @Override
     public String getDescription() {
         return "Позволяет считать и исполнить скрипт из указанного файла. \nТребует ввода названия .txt файла.";
@@ -23,19 +26,17 @@ public class ExecuteScript implements ICommand{
 
     @Override
     public void execute(App app, String[] args) {
-        try (BufferedReader br = new BufferedReader(new FileReader(args[1]))) {
+        IIOManager ioManager = app.getIoManager();
+        ArrayList<String> commands = new ArrayList<>();
+        try (BufferedReader br = new BufferedReader(new FileReader(args[0]))) {
             for (String line = br.readLine(); line != null; line = br.readLine()) {
-                String[] command = line.split(" ");
-                app.getCommandManager().getCommandByName(command[0]).execute(app, command);
+                commands.add(line);
             }
+            ioManager.addCommandsToSimulator(commands);
         } catch (FileNotFoundException e) {
-            app.getIoManager().writeMessage("Файл со скриптом не найден!");
+            app.getIoManager().writeMessage("Файл со скриптом не найден!", outInQuiteMode);
         } catch (IOException e) {
-            app.getIoManager().writeMessage("Что-то пошло не так... Повторите ввод. \n");
-        } catch (CommandNotFound e) {
-            app.getIoManager().writeMessage("Команда не найдена! Ошибка в файле скрипта.\n");
-        } catch (StackOverflowError e) {
-            app.getIoManager().writeMessage("Скрипт образует цикл! Ошибка в файле скрипта.");
+            app.getIoManager().writeMessage("Что-то пошло не так... Повторите ввод. \n", outInQuiteMode);
         }
     }
 }

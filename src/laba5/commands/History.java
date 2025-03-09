@@ -2,6 +2,8 @@ package laba5.commands;
 
 import laba5.App;
 
+import java.util.ArrayList;
+
 /**
  * Класс команды, реализующий вывод последних 15 использованных команд.
  * @author Homoursus
@@ -15,8 +17,9 @@ public class History implements ICommand{
 
     @Override
     public void execute(App app, String[] args) {
-        for (String lastUsedCommand : app.getLastUsedCommands()) {
-            app.getIoManager().writeMessage("-" + lastUsedCommand + "\n");
+        ArrayList<String> history = app.getLastUsedCommands();
+        for (int i = Math.max(history.size() - 15, 0); i < history.size(); i++) {
+            app.getIoManager().writeMessage("-" + history.get(i) + "\n", outInQuiteMode);
         }
     }
 }

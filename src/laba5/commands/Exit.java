@@ -8,6 +8,7 @@ import laba5.App;
  * @version 1.0
  */
 public class Exit implements ICommand{
+
     @Override
     public String getDescription() {
         return "Завершить программу (без сохранения коллекции в файл)";
