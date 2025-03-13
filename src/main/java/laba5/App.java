@@ -122,7 +122,7 @@ public class App {
         lastSessionUserInput = lastSessionUserInputStoragingManager.readFromStorage(ioManager);
         if (!lastSessionUserInput.isEmpty()){
             ioManager.writeMessage("Последняя сессия была завершена некорректно. Хотите вернуться к ней?\n"+
-                    "да - вернуться к старой сессии\n"+ "какой-либо другой набор символов - запустить новую сессию\n", false);
+                    "да - вернуться к старой сессии \nкакой-либо другой набор символов - запустить новую сессию\n", false);
             String answer = ioManager.getRawInput();
             if (answer != null && answer.equalsIgnoreCase("да")){
                 ioManager.addCommandsToSimulator(lastSessionUserInput);
@@ -135,8 +135,6 @@ public class App {
 
                 userInput = ioManager.getRawInput().toLowerCase();
                 splittedInput = userInput.split(" ");
-
-                //KeyListener keyListener = new KeyListener(
 
                 String[] args = new String[splittedInput.length - 1];
                 if( args.length != 0) {

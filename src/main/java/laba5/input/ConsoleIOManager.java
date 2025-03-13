@@ -150,9 +150,7 @@ public class ConsoleIOManager implements IIOManager {
     }
 
     @Override
-    public void addCommandsToSimulator(ArrayList<String> commands) {
-        emulatorBuffer = commands;
-    }
+    public void addCommandsToSimulator(ArrayList<String> commands) { emulatorBuffer.addAll(0, commands); }
 
     @Override
     public ArrayList<String> getLastSessionUserInput(){

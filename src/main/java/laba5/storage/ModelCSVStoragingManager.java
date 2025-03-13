@@ -12,6 +12,7 @@ import laba5.model.modelEnums.DragonType;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
 import java.util.LinkedList;
 
 /**
@@ -80,44 +81,57 @@ public class ModelCSVStoragingManager implements IModelStorageManager {
         try (BufferedReader br = new BufferedReader(new FileReader(path))) {
             for (String l = br.readLine(); l != null; l = br.readLine()) {
                 String[] line = l.split(";");
-                if (line.length == 17) {
-                    String name = line[0];
-                    Coordinates coordinates = new Coordinates(Float.parseFloat(line[1]), Integer.parseInt(line[2]));
-                    long age = Long.parseLong(line[3]);
-                    String description;
-                    if (line[4].equals("null")) {
-                        description = null;
-                    } else {
-                        description = line[4];
+                try {
+                    if (line.length == 17) {
+                        String name = line[0];
+                        Float x = Float.parseFloat(line[1]);
+                        Integer y = Integer.parseInt(line[2]);
+                        Coordinates coordinates = new Coordinates(x, y);
+                        long age = Long.parseLong(line[3]);
+                        String description;
+                        if (line[4].equals("null")) {
+                            description = null;
+                        } else {
+                            description = line[4];
+                        }
+                        DragonType dragonType;
+                        if (line[5].equals("null")) {
+                            dragonType = null;
+                        } else {
+                            dragonType = DragonType.valueOf(line[5]);
+                        }
+                        DragonCharacter dragonCharacter = DragonCharacter.valueOf(line[6]);
+                        Location location;
+                        if (line[7].equals("null")) {
+                            location = null;
+                        } else {
+                            location = new Location(Float.parseFloat(line[12]), Double.parseDouble(line[13]),
+                                    Integer.parseInt(line[14]));
+                        }
+                        Person person;
+                        if (line[7].equals("null")) {
+                            person = null;
+                        } else {
+                            person = new Person(line[7], Integer.parseInt(line[8]), Color.valueOf(line[9]),
+                                    Color.valueOf(line[10]), Country.valueOf(line[11]), location);
+                        }
+                        long id = Long.parseLong(line[15]);
+                        java.time.ZonedDateTime creationDate;
+                        creationDate = java.time.ZonedDateTime.parse(line[16]);
+
+                        Dragon dragon = new Dragon(name, coordinates, age, description, dragonType,
+                                dragonCharacter, person, id, creationDate);
+                        if (x <= -589 || age <= 0 || id <= 0 ){
+                            haveIncorrectLines = true;
+                            continue;
+                        }
+                        collection.add(dragon);
                     }
-                    DragonType dragonType;
-                    if (line[5].equals("null")) {
-                        dragonType = null;
-                    } else {
-                        dragonType = DragonType.valueOf(line[5]);
+                    else{
+                        haveIncorrectLines = true;
                     }
-                    DragonCharacter dragonCharacter = DragonCharacter.valueOf(line[6]);
-                    Location location;
-                    if (line[7].equals("null")) {
-                        location = null;
-                    } else {
-                        location = new Location(Float.parseFloat(line[12]), Double.parseDouble(line[13]),
-                                Integer.parseInt(line[14]));
-                    }
-                    Person person;
-                    if (line[7].equals("null")) {
-                        person = null;
-                    } else {
-                        person = new Person(line[7], Integer.parseInt(line[8]), Color.valueOf(line[9]),
-                                Color.valueOf(line[10]), Country.valueOf(line[11]), location);
-                    }
-                    long id = Long.parseLong(line[15]);
-                    java.time.ZonedDateTime creationDate = java.time.ZonedDateTime.parse(line[16]);
-                    Dragon dragon = new Dragon(name, coordinates, age, description, dragonType,
-                            dragonCharacter, person, id, creationDate);
-                    collection.add(dragon);
                 }
-                else{
+                catch (java.time.format.DateTimeParseException | IllegalArgumentException e) {
                     haveIncorrectLines = true;
                 }
             }
