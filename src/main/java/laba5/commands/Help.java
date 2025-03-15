@@ -17,12 +17,13 @@ public class Help implements ICommand{
     public void execute(App app, String[] args) {
         IIOManager ioManager = app.getIoManager();
         ICommand[] commands = app.getCommandManager().getCommands();
-        String[] commandsNames = app.getCommandManager().getCommandNames();
         final String SEPARATOR = "-----------------------------------------------------------------------\n";
         for (int i = 0; i < commands.length; i++){
-            ioManager.writeMessage(SEPARATOR, outInQuiteMode);
-            ioManager.writeMessage(commandsNames[i] + "\n"+ commands[i].getDescription() + "\n", outInQuiteMode);
+            ioManager.printMessage(SEPARATOR, outInQuiteMode);
+            ioManager.printMessage(commands[i].getClass().getSimpleName().replaceAll("([a-z])([A-Z])",
+                    "$1_$2").toLowerCase()+"\n", outInQuiteMode);
+            ioManager.printMessage( commands[i].getDescription() + "\n", outInQuiteMode);
         }
-        ioManager.writeMessage(SEPARATOR, outInQuiteMode);
+        ioManager.printMessage(SEPARATOR, outInQuiteMode);
     }
 }

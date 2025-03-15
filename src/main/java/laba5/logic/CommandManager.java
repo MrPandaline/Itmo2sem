@@ -4,6 +4,7 @@ import laba5.App;
 import laba5.commands.ICommand;
 import laba5.exceptions.CommandNotFound;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
@@ -18,10 +19,20 @@ public class CommandManager {
     /**
      * Метод, добавляющий команду в хэш-таблицу.
      * @param command Класс команды.
-     * @param commandName Строка, необходимую внести пользователю, для выполнения команды.
      * */
-    public void addCommand(String commandName, ICommand command) {
-        this.commands.put(commandName, command);
+    public void addCommand(ICommand command) {
+        this.commands.put(command.getClass().getSimpleName().replaceAll("([a-z])([A-Z])",
+                "$1_$2").toLowerCase(), command);
+    }
+
+    /**
+     * Метод, добавляющий несколько команд в хэш-таблицу.
+     * @param commandNames Названия команд, которые необходимо добавить.
+     * */
+    public void addCommands(ICommand... commandNames) {
+        for (ICommand command : commandNames){
+            addCommand(command);
+        }
     }
 
     /**
@@ -38,7 +49,7 @@ public class CommandManager {
         }
     }
 
-    /** Метод менеджера (Invoker'а) команд, для выполнения команды по её названию*/
+    /** Метод менеджера (для Invoker'а) команд, для выполнения команды по её названию*/
     public void execute(App app, String commandName, String[] args) throws CommandNotFound {
         getCommandByName(commandName).execute(app, args);
     }
@@ -48,8 +59,10 @@ public class CommandManager {
         return this.commands.values().toArray(new ICommand[0]);
     }
 
-    /** Метод, возвращающий массив названий команд.*/
-    public String[] getCommandNames() {
-        return this.commands.keySet().toArray(new String[0]);
+    /**
+     * Метод, возвращающий имена команд
+     * */
+    public ArrayList<String> getCommandNames(){
+        return new ArrayList<>(this.commands.keySet());
     }
 }

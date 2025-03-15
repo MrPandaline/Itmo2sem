@@ -2,6 +2,7 @@ package laba5;
 
 import laba5.commands.*;
 import laba5.exceptions.CommandNotFound;
+import laba5.exceptions.UnplannedAppTermination;
 import laba5.input.IIOManager;
 import laba5.logic.CollectionManager;
 import laba5.logic.CommandManager;
@@ -12,7 +13,6 @@ import laba5.storage.OnCrashStorageWriter;
 
 import java.io.IOException;
 import java.util.*;
-import java.awt.event.KeyListener;
 
 /**
  * Класс, объединяющий все модули приложения.
@@ -74,7 +74,8 @@ public class App {
      * @param storageManager класс-реализация менеджера управления хранилищем.
      * @param commandsFileName название файла, в котором будут храниться последние 15 использованных команды.
      * */
-    public App(IModelStorageManager storageManager, IIOManager ioManager, String commandsFileName, String emergencyFileName) {
+    public App(IModelStorageManager storageManager, IIOManager ioManager, String commandsFileName,
+               String emergencyFileName, CommandManager commandManager) {
         this.ioManager = ioManager;
         this.storageManager = storageManager;
         this.lastUsedCommands = new CommandsListStoragingManager(commandsFileName).readFromStorage(ioManager);
@@ -85,78 +86,58 @@ public class App {
         Dragon.setIdGenerator(storageManager.getNextID(ioManager));
         collectionManager.setCollection(storageManager.readFromStorage(ioManager));
         Collections.sort(collectionManager.getCollection());
-        this.commandManager = this.buildCommandManager();
+        this.commandManager = commandManager;
     }
 
-    /**
-     * Метод, инициализирующий менеджер управления команд.
-     * */
-    private CommandManager buildCommandManager() {
-        CommandManager commandManager = new CommandManager();
-        commandManager.addCommand("help", new Help());
-        commandManager.addCommand("info", new Info());
-        commandManager.addCommand("show", new Show());
-        commandManager.addCommand("add", new Add());
-        commandManager.addCommand("update", new Update());
-        commandManager.addCommand("remove_by_id", new RemoveById());
-        commandManager.addCommand("clear", new Clear());
-        commandManager.addCommand("save", new Save());
-        commandManager.addCommand("execute_script", new ExecuteScript());
-        commandManager.addCommand("exit", new Exit());
-        commandManager.addCommand("remove_head", new RemoveHead());
-        commandManager.addCommand("remove_greater", new RemoveGreater());
-        commandManager.addCommand("history", new History());
-        commandManager.addCommand("group_counting_by_name", new GroupCountingByName());
-        commandManager.addCommand("filter_greater_than_type", new FilterGreaterThanType());
-        commandManager.addCommand("print_field_descending_killer", new PrintFieldDescendingKiller());
-        return commandManager;
-    }
 
     /**
      * Метод, запускающий приложение.
      */
     public void run(){
-        String userInput;
-        ArrayList<String> lastSessionUserInput;
-        ioManager.writeMessage("Введите help для получения списка доступных команд.\n", false);
-        lastSessionUserInput = lastSessionUserInputStoragingManager.readFromStorage(ioManager);
-        if (!lastSessionUserInput.isEmpty()){
-            ioManager.writeMessage("Последняя сессия была завершена некорректно. Хотите вернуться к ней?\n"+
-                    "да - вернуться к старой сессии \nкакой-либо другой набор символов - запустить новую сессию\n", false);
-            String answer = ioManager.getRawInput();
-            if (answer != null && answer.equalsIgnoreCase("да")){
-                ioManager.addCommandsToSimulator(lastSessionUserInput);
+        try {
+            String userInput;
+            ArrayList<String> lastSessionUserInput;
+            ioManager.printMessage("Введите help для получения списка доступных команд.\n", false);
+            lastSessionUserInput = lastSessionUserInputStoragingManager.readFromStorage(ioManager);
+            if (!lastSessionUserInput.isEmpty()) {
+                ioManager.printMessage("Последняя сессия была завершена некорректно. Хотите вернуться к ней?\n" +
+                        "да - вернуться к старой сессии \nкакой-либо другой набор символов - запустить новую сессию\n", false);
+                String answer = ioManager.getRawInput();
+                if (answer != null && answer.equalsIgnoreCase("да")) {
+                    ioManager.addCommandsToSimulator(lastSessionUserInput);
+                }
+            }
+            while (isAppWorking) {
+                try {
+                    lastSessionUserInput = ioManager.getLastSessionUserInput();
+                    String[] splittedInput;
+
+                    userInput = ioManager.getRawInput().toLowerCase();
+                    splittedInput = userInput.split(" ");
+
+                    String[] args = new String[splittedInput.length - 1];
+                    if (args.length != 0) {
+                        System.arraycopy(splittedInput, 1, args, 0, args.length);
+                    }
+                    commandManager.execute(this, splittedInput[0], args);
+                    this.lastUsedCommands.add(splittedInput[0]);
+                } catch (CommandNotFound | NullPointerException e) {
+                    ioManager.printError("Команда не найдена! Введите help для получения списка доступных команд.\n");
+                } catch (NumberFormatException e) {
+                    ioManager.printError("Неверный ввод числового параметра!\n");
+                } catch (Exception e) {
+                    ioManager.printError("Произошла непредвиденная ошибка! Отправьте создателю файл краш-репорт!\n");
+                    try {
+                        OnCrashStorageWriter.write(lastSessionUserInput, e);
+                    } catch (IOException e1) {
+                        ioManager.printError("Произошла ошибка при записи краш-репорта!\n");
+                    }
+                }
             }
         }
-        while (isAppWorking) {
-            try{
-                lastSessionUserInput = ioManager.getLastSessionUserInput();
-                String[] splittedInput;
-
-                userInput = ioManager.getRawInput().toLowerCase();
-                splittedInput = userInput.split(" ");
-
-                String[] args = new String[splittedInput.length - 1];
-                if( args.length != 0) {
-                    System.arraycopy(splittedInput, 1, args, 0, args.length);
-                }
-                commandManager.execute(this ,splittedInput[0] ,args);
-                this.lastUsedCommands.add(splittedInput[0]);
-            }
-            catch(CommandNotFound | NullPointerException e) {
-                ioManager.writeMessage("Команда не найдена! Введите help для получения списка доступных команд.\n", false);
-            }
-            catch (NumberFormatException e) {
-                ioManager.writeMessage("Неверный ввод числового параметра!\n", false);
-            }
-            catch (Exception e){
-                ioManager.writeMessage("Произошла непредвиденная ошибка! Отправьте создателю файл краш-репорт!\n", false);
-                try {
-                    OnCrashStorageWriter.write(lastSessionUserInput, e);
-                } catch (IOException e1) {
-                    ioManager.writeMessage("Произошла ошибка при записи краш-репорта!\n", false);
-                }
-            }
+        catch (UnplannedAppTermination e) {
+            ioManager.printMessage(e.getMessage(), false);
+            turnOffApp();
         }
     }
 

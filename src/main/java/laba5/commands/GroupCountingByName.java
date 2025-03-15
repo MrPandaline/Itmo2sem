@@ -38,7 +38,7 @@ public class GroupCountingByName implements ICommand{
             }
         }
         for (String name : countMap.keySet()) {
-            ioManager.writeMessage("Элементов коллекции с именем " + name + ": " + countMap.get(name) + "\n", outInQuiteMode);
+            ioManager.printMessage("Элементов коллекции с именем " + name + ": " + countMap.get(name) + "\n", outInQuiteMode);
         }
     }
 }

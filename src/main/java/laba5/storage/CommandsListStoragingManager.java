@@ -43,7 +43,7 @@ public class CommandsListStoragingManager {
                 }
             }
         } catch (IOException e) {
-        e.printStackTrace();
+            System.err.println(e.getMessage());
         }
     }
 
@@ -57,7 +57,7 @@ public class CommandsListStoragingManager {
         try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
             Collections.addAll(arrayList, br.readLine().split(";"));
         } catch (FileNotFoundException e) {
-            ioManager.writeMessage("Файл " + fileName + " не найден!\n", true);
+            ioManager.printMessage("Файл " + fileName + " не найден!\n", true);
         } catch (IOException e) {
             throw new RuntimeException(e);
         } catch (NullPointerException e) {

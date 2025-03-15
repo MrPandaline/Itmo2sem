@@ -1,30 +1,34 @@
 package laba5.input;
 
+import laba5.exceptions.UnplannedAppTermination;
 import laba5.storage.CommandsListStoragingManager;
 import org.jline.reader.*;
+import org.jline.reader.impl.completer.StringsCompleter;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 
-import java.io.BufferedReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
  * Класс реализующий модуль ввода-вывода через консоль с поддержкой истории команд.
+ * @see IIOManager
  * @author Homoursus
  * @version 2.0
  */
 public class ConsoleIOManager implements IIOManager {
     private final LineReader lineReader;
     private final Terminal terminal;
+    private final PrintStream standardErrStream = System.err;
     private final CommandsListStoragingManager commandStoraging;
     private final ArrayList<String> lastSessionUserInput;
-    private ArrayList<String> emulatorBuffer;
-    private boolean isUsingAutomatedInputNow;
+    private final ArrayList<String> emulatorBuffer;
+    private boolean isUsingAutomatedInput;
 
-    public ConsoleIOManager(BufferedReader reader, String emergencyFileName) {
+    public ConsoleIOManager(ArrayList<String> completerCommandNames, String emergencyFileName) {
         this.lastSessionUserInput = new ArrayList<>();
         this.emulatorBuffer = new ArrayList<>();
         this.commandStoraging = new CommandsListStoragingManager(emergencyFileName);
@@ -33,9 +37,18 @@ public class ConsoleIOManager implements IIOManager {
             this.terminal = TerminalBuilder.builder()
                     .system(true)
                     .build();
-            
+            Completer completer = new Completer() {
+                private final StringsCompleter stringsCompleter = new StringsCompleter(completerCommandNames);
+
+                @Override
+                public void complete(LineReader reader, ParsedLine line, List<Candidate> candidates) {
+                    System.out.println("Complete method called!");
+                    stringsCompleter.complete(reader, line, candidates);
+                }
+            };
             this.lineReader = LineReaderBuilder.builder()
                     .terminal(terminal)
+                    .completer(completer)
                     .variable(LineReader.HISTORY_FILE, System.getProperty("user.home") + "/.laba5_history")
                     .variable(LineReader.HISTORY_SIZE, 100)
                     .option(LineReader.Option.HISTORY_BEEP, false)
@@ -46,14 +59,19 @@ public class ConsoleIOManager implements IIOManager {
         }
     }
 
-    public String getRawInput() {
+    public String getRawInput(){
         String input = "";
         try {
             if (!emulatorBuffer.isEmpty()) {
-                isUsingAutomatedInputNow = true;
+                isUsingAutomatedInput = true;
                 input = emulatorBuffer.remove(0);
+                System.setErr(new PrintStream( new BufferedOutputStream( new FileOutputStream ("lastErrors.txt"))));
             } else {
-                isUsingAutomatedInputNow = false;
+                if (!System.err.equals(standardErrStream)) {
+                    System.err.close();
+                    System.setErr(standardErrStream);
+                }
+                isUsingAutomatedInput = false;
                 input = lineReader.readLine("> ");
             }
 
@@ -63,13 +81,16 @@ public class ConsoleIOManager implements IIOManager {
             }
 
         } catch (UserInterruptException e) {
-            // Ctrl+C
+
             return null;
         } catch (EndOfFileException e) {
-            // Ctrl+D
-            return null;
+            printError("Вы нажали сочетание клавиш Ctrl+D.\n");
+            throw new UnplannedAppTermination();
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
         }
-        
+
+        assert input != null;
         return input.isEmpty() ? null : input;
     }
 
@@ -82,7 +103,7 @@ public class ConsoleIOManager implements IIOManager {
                 input = testInput;
             }
             else {
-                writeMessage("Некорректный ввод! Попробуйте ещё раз.\n", false);
+                printError("Некорректный ввод! Попробуйте ещё раз.\n");
             }
         }
         return input;
@@ -97,7 +118,7 @@ public class ConsoleIOManager implements IIOManager {
                 input = testInput;
             }
             else {
-                writeMessage("Некорректный ввод! Попробуйте ещё раз.\n", false);
+                printError("Некорректный ввод! Попробуйте ещё раз.\n");
             }
         }
         return input;
@@ -124,7 +145,7 @@ public class ConsoleIOManager implements IIOManager {
                 }
             }
             if (input.isEmpty()){
-                writeMessage("Некорректный ввод! Попробуйте ещё раз.\n", false);
+                printError("Некорректный ввод! Попробуйте ещё раз.\n");
             }
         }
         return input;
@@ -137,16 +158,22 @@ public class ConsoleIOManager implements IIOManager {
             try {
                 result = function.apply(getRawInput());
             } catch (NumberFormatException | NullPointerException e) {
-                writeMessage("Неверно введено число! Повторите ввод.\n", false);
+                printError("Неверно введено число! Повторите ввод.\n");
             }
         }
         return result;
     }
 
-    public void writeMessage(String message, boolean willBeInQuiteMode){
-        if (!isUsingAutomatedInputNow || willBeInQuiteMode) {
+    @Override
+    public void printMessage(String message, boolean willBeInQuiteMode){
+        if (!isUsingAutomatedInput || willBeInQuiteMode) {
             System.out.print(message);
         }
+    }
+
+    @Override
+    public void printError(String errorMessage){
+        System.err.print(errorMessage);
     }
 
     @Override
@@ -157,7 +184,4 @@ public class ConsoleIOManager implements IIOManager {
         return lastSessionUserInput;
     }
 
-    public boolean isUsingAutomatedInputNow(){
-        return isUsingAutomatedInputNow;
-    }
 }

@@ -32,8 +32,8 @@ public class PrintFieldDescendingKiller implements ICommand {
             });
         for (Dragon dragon : collection) {
             if (dragon.killer() != null) {
-                app.getIoManager().writeMessage(dragon.killer().toString() + "\n", outInQuiteMode);
-                app.getIoManager().writeMessage("\n", outInQuiteMode);
+                app.getIoManager().printMessage(dragon.killer().toString() + "\n", outInQuiteMode);
+                app.getIoManager().printMessage("\n", outInQuiteMode);
             }
         }
         Collections.sort(collection);

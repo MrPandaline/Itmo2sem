@@ -1,7 +1,6 @@
 package laba5.commands;
 
 import laba5.App;
-import laba5.exceptions.CommandNotFound;
 import laba5.input.IIOManager;
 
 import java.io.BufferedReader;
@@ -34,9 +33,9 @@ public class ExecuteScript implements ICommand{
             }
             ioManager.addCommandsToSimulator(commands);
         } catch (FileNotFoundException e) {
-            app.getIoManager().writeMessage("Файл со скриптом не найден!", outInQuiteMode);
+            app.getIoManager().printError("Файл со скриптом не найден!");
         } catch (IOException e) {
-            app.getIoManager().writeMessage("Что-то пошло не так... Повторите ввод. \n", outInQuiteMode);
+            app.getIoManager().printError("Что-то пошло не так... Повторите ввод. \n");
         }
     }
 }

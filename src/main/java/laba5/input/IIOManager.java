@@ -1,5 +1,7 @@
 package laba5.input;
 
+import laba5.exceptions.UnplannedAppTermination;
+
 import java.util.ArrayList;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -15,7 +17,7 @@ public interface IIOManager {
      * Метод, возвращающий необработанную строку, введённую пользователем.
      * Должен корректно работать вместе с эмулятором ввода.
      */
-    String getRawInput();
+    String getRawInput() throws UnplannedAppTermination;
 
     /**
      * Метод, получающий строку, введённую пользователем, удовлетворяющую определённому условию.
@@ -28,7 +30,7 @@ public interface IIOManager {
      * @param message Сообщение, которое необходимо вывести.
      * @param willBeInQuiteMode Флаг, показывающий, будет ли выведено сообщение в тихом режиме.
      * */
-    void writeMessage(String message, boolean willBeInQuiteMode);
+    void printMessage(String message, boolean willBeInQuiteMode);
 
     /**
      * Параметризованный метод, получающий число, введённое пользователем.
@@ -68,8 +70,8 @@ public interface IIOManager {
     ArrayList<String> getLastSessionUserInput();
 
     /**
-     * Метод, возвращающий значение флага. Используется ли сейчас автоматизированный ввод из буфера
+     * Вывод ошибки.
      */
-    boolean isUsingAutomatedInputNow();
+    void printError(String errorMessage);
 }
 

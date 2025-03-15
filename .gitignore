@@ -31,6 +31,10 @@ bin/
 /src/main/java/laba5/KeyInterceptor.java
 /.idea/jarRepositories.xml
 /test.csv
+/add_dragon.txt
+/commands.txt
+/commandsFileName.csv
+/emergencyCommands.csv
 /target/
 /src/main/java/laba5/misc/CamelToSnakeCaseConverter.java
 /src/main/java/laba5/misc/ReflectionParser.java

@@ -19,7 +19,7 @@ public class History implements ICommand{
     public void execute(App app, String[] args) {
         ArrayList<String> history = app.getLastUsedCommands();
         for (int i = Math.max(history.size() - 15, 0); i < history.size(); i++) {
-            app.getIoManager().writeMessage("-" + history.get(i) + "\n", outInQuiteMode);
+            app.getIoManager().printMessage("-" + history.get(i) + "\n", outInQuiteMode);
         }
     }
 }

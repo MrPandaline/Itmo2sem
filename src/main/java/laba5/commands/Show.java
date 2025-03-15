@@ -3,8 +3,6 @@ package laba5.commands;
 import laba5.App;
 import laba5.input.IIOManager;
 
-import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedList;
 
 /**
@@ -25,11 +23,11 @@ public class Show implements ICommand{
         IIOManager ioManager = app.getIoManager();
         if (!collection.isEmpty()) {
             for (Object object : collection) {
-                ioManager.writeMessage(object.toString() + '\n' + '\n', outInQuiteMode);
+                ioManager.printMessage(object.toString() + '\n' + '\n', outInQuiteMode);
             }
         }
         else {
-            ioManager.writeMessage("Коллекция пуста! Введите add для добавления нового элемента.", outInQuiteMode);
+            ioManager.printMessage("Коллекция пуста! Введите add для добавления нового элемента.", outInQuiteMode);
         }
     }
 }

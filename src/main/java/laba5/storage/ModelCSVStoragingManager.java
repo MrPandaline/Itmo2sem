@@ -12,7 +12,6 @@ import laba5.model.modelEnums.DragonType;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.HashSet;
 import java.util.LinkedList;
 
 /**
@@ -136,12 +135,12 @@ public class ModelCSVStoragingManager implements IModelStorageManager {
                 }
             }
         } catch(FileNotFoundException e){
-            ioManager.writeMessage("Файл коллекции не найден!\n", false);
+            ioManager.printError("Файл коллекции не найден!\n");
         } catch(IOException e){
-            ioManager.writeMessage("Что-то пошло не так... файл коллекции не был считан!\n", false);
+            ioManager.printError("Что-то пошло не так... файл коллекции не был считан!\n");
         }
         if (haveIncorrectLines) {
-            ioManager.writeMessage("Часть элементов коллекции не были считаны! Они исключены из коллекции.\n", false);
+            ioManager.printError("Часть элементов коллекции не были считаны! Они исключены из коллекции.\n");
         }
 
         return collection;
@@ -159,7 +158,7 @@ public class ModelCSVStoragingManager implements IModelStorageManager {
                 }
             }
         } catch(FileNotFoundException e){
-            ioManager.writeMessage("Файл коллекции не найден! Генерация id начнётся с 1.\n", false);
+            ioManager.printError("Файл коллекции не найден! Генерация id начнётся с 1.\n");
         } catch(IOException e){
             throw new RuntimeException(e);
         }

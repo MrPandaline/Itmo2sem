@@ -23,12 +23,12 @@ public class Info implements ICommand{
         CollectionManager<?> collectionManager = app.getCollectionManager();
         ZonedDateTime time = collectionManager.getCollectionInitializationTime();
         IIOManager ioManager = app.getIoManager();
-        ioManager.writeMessage("Тип коллекции: " + collectionManager.getCollectionType().getSimpleName() + "\n", outInQuiteMode);
-        ioManager.writeMessage("Время инициализации коллекции: " +
+        ioManager.printMessage("Тип коллекции: " + collectionManager.getCollectionType().getSimpleName() + "\n", outInQuiteMode);
+        ioManager.printMessage("Время инициализации коллекции: " +
                 time.toString().substring(0, 10) +" " + time.toString().substring(11, 19) + "\n", outInQuiteMode);
-        ioManager.writeMessage("Размер коллекции: " + collectionManager.getCollection().size() + "\n", outInQuiteMode);
+        ioManager.printMessage("Размер коллекции: " + collectionManager.getCollection().size() + "\n", outInQuiteMode);
         if (!collectionManager.getCollection().isEmpty()) {
-            ioManager.writeMessage("Класс, экземпляры которого содержатся в коллекции: " +
+            ioManager.printMessage("Класс, экземпляры которого содержатся в коллекции: " +
                     collectionManager.getCollection().iterator().next().getClass().getSimpleName() + "\n", outInQuiteMode);
         }
     }

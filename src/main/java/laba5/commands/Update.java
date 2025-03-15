@@ -23,7 +23,7 @@ public class Update implements ICommand{
         IIOManager ioManager = app.getIoManager();
         LinkedList<Dragon> linkedList = app.getCollectionManager().getCollection();
         if (args.length == 0) {
-            ioManager.writeMessage("Вы не ввели id элемента коллекции!", outInQuiteMode);
+            ioManager.printMessage("Вы не ввели id элемента коллекции!", outInQuiteMode);
         }
         else{
             int id = Integer.parseInt(args[0]);
@@ -36,7 +36,7 @@ public class Update implements ICommand{
                 }
             }
             if (!flag){
-                ioManager.writeMessage("Элемент коллекции с таким id не найден! \n" +
+                ioManager.printMessage("Элемент коллекции с таким id не найден! \n" +
                         "Введите show, чтобы вывести список доступных элементов.\n", outInQuiteMode);
             }
 
