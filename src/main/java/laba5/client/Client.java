@@ -126,7 +126,7 @@ public class Client {
                     boolean haveAdditionalInf = false;
 
                     if (command instanceof IMultiLineCommand) {
-                        addInf = ((IMultiLineCommand) command).getAdditionalUserInput(ioManager);
+                        ((IMultiLineCommand) command).getAdditionalUserInput(ioManager);
                         haveAdditionalInf = true;
                     }
                     if (command instanceof IClientSideCommand) {
