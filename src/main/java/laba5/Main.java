@@ -1,16 +1,5 @@
 package laba5;
 
-import laba5.commands.*;
-import laba5.input.ConsoleIOManager;
-import laba5.input.IIOManager;
-import laba5.logic.CommandManager;
-import laba5.storage.ModelCSVStoragingManager;
-import laba5.storage.IModelStorageManager;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-
-
 
 /**
  * Требования:
@@ -31,24 +20,8 @@ import java.io.InputStreamReader;
 // TODO: Разграничить IOManager и Validator, сделать валидацию модельки при чтении из файла.
 // TODO: Придумать как сделать quite вывод нормально.
 
+// TODO: Legacy Code. Надо выкинуть этот файл после дописания 6 лабы.
 public class Main {
-  public static void main(String[] args) {
-      if (args.length == 0) {
-          System.out.println("для Корректной работы добавьте название .csv файла при запуске приложения!");
-      }
-      else {
-          String emergencyCommands = "emergencyCommands.csv";
-          CommandManager commandManager = new CommandManager();
-          commandManager.addCommands(new Help(),new Info(), new Show(), new Add(),new Update(),
-                  new RemoveById(), new Clear(), new Save(), new ExecuteScript(),
-                  new Exit(), new RemoveHead(), new RemoveGreater(), new History(),
-                  new GroupCountingByName(), new FilterGreaterThanType(),
-                  new PrintFieldDescendingKiller());
-          
-          IIOManager ioManager = new ConsoleIOManager(commandManager.getCommandNames(), emergencyCommands);
-          IModelStorageManager storageManager = new ModelCSVStoragingManager(args[0]);
-          App app = new App(storageManager, ioManager, "commandsFileName.csv", emergencyCommands, commandManager);
-          app.run();
-      }
-  }
+    public static void main(String[] args) {
+    }
 }

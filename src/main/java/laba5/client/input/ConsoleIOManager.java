@@ -1,0 +1,177 @@
+package laba5.client.input;
+
+import laba5.common.exceptions.UnplannedAppTermination;
+import laba5.server.storage.CommandsListStoragingManager;
+import org.jline.reader.*;
+import org.jline.reader.impl.completer.StringsCompleter;
+import org.jline.terminal.Terminal;
+import org.jline.terminal.TerminalBuilder;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.function.Function;
+import java.util.function.Predicate;
+
+/**
+ * Класс реализующий модуль ввода-вывода через консоль с поддержкой истории команд.
+ * @see IIOManager
+ * @author Homoursus
+ * @version 2.0
+ */
+public class ConsoleIOManager implements IIOManager {
+    private final LineReader lineReader;
+    private final Terminal terminal;
+    private final PrintStream standardErrStream = System.err;
+    private final CommandsListStoragingManager commandStoraging;
+    private final ArrayList<String> lastSessionUserInput;
+    private final ArrayList<String> emulatorBuffer;
+    private boolean isUsingAutomatedInput;
+
+    public ConsoleIOManager(ArrayList<String> completerCommandNames, String emergencyFileName) {
+        this.lastSessionUserInput = new ArrayList<>();
+        this.emulatorBuffer = new ArrayList<>();
+        this.commandStoraging = new CommandsListStoragingManager(emergencyFileName);
+        
+        try {
+            this.terminal = TerminalBuilder.builder()
+                    .system(true)
+                    .build();
+            this.lineReader = LineReaderBuilder.builder()
+                    .terminal(terminal)
+                    .completer(new StringsCompleter(completerCommandNames))
+                    .variable(LineReader.HISTORY_FILE, System.getProperty("user.home") + "/.laba5_history")
+                    .variable(LineReader.HISTORY_SIZE, 100)
+                    .option(LineReader.Option.HISTORY_BEEP, false)
+                    .option(LineReader.Option.HISTORY_IGNORE_SPACE, true)
+                    .build();
+        } catch (IOException e) {
+            throw new RuntimeException("Не удалось инициализировать терминал: " + e.getMessage());
+        }
+    }
+
+    public String getRawInput(){
+        String input = "";
+        try {
+            if (!emulatorBuffer.isEmpty()) {
+                isUsingAutomatedInput = true;
+                input = emulatorBuffer.remove(0);
+                System.setErr(new PrintStream( new BufferedOutputStream( new FileOutputStream ("lastErrors.txt"))));
+            } else {
+                if (!System.err.equals(standardErrStream)) {
+                    System.err.close();
+                    System.setErr(standardErrStream);
+                }
+                isUsingAutomatedInput = false;
+                input = lineReader.readLine("> ");
+            }
+
+            if (input != null && !input.trim().isEmpty()) {
+                lastSessionUserInput.add(input);
+                commandStoraging.writeToStorage(lastSessionUserInput, false);
+            }
+
+        } catch (UserInterruptException e) {
+
+            return null;
+        } catch (EndOfFileException e) {
+            printError("Вы нажали сочетание клавиш Ctrl+D.\n");
+            throw new UnplannedAppTermination();
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
+        assert input != null;
+        return input.isEmpty() ? null : input;
+    }
+
+    @Override
+    public String getValidRawInput(Predicate<String> condition) {
+        String input = "";
+        while(input.isEmpty()){
+            String testInput = getRawInput();
+            if(condition.test(testInput)){
+                input = testInput;
+            }
+            else {
+                printError("Некорректный ввод! Попробуйте ещё раз.\n");
+            }
+        }
+        return input;
+    }
+
+    @Override
+    public <T extends Number> T getValidDigit(Function<String, T> function, Predicate<T> condition) {
+        T input = null;
+        while(input == null){
+            T testInput = getDigit(function);
+            if(condition.test(testInput)){
+                input = testInput;
+            }
+            else {
+                printError("Некорректный ввод! Попробуйте ещё раз.\n");
+            }
+        }
+        return input;
+    }
+
+    @Override
+    public String getConstantString(ArrayList<String> constants, boolean canBeNull) {
+        String input = "";
+        mark:
+        while(input.isEmpty()){
+            String testInput = getRawInput();
+            for (String constant : constants){
+                if(testInput == null){
+                    if (canBeNull) {
+                        input = null;
+                        break mark;
+                    }
+                    else{
+                        break;
+                    }
+                }
+                if(testInput.equals(constant)){
+                    input = constant;
+                }
+            }
+            if (input.isEmpty()){
+                printError("Некорректный ввод! Попробуйте ещё раз.\n");
+            }
+        }
+        return input;
+    }
+
+    @Override
+    public <T extends Number> T getDigit(Function<String, T> function) {
+        T result = null;
+        while(result == null){
+            try {
+                result = function.apply(getRawInput());
+            } catch (NumberFormatException | NullPointerException e) {
+                printError("Неверно введено число! Повторите ввод.\n");
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public void printMessage(String message, boolean willBeInQuiteMode){
+        if (!isUsingAutomatedInput || willBeInQuiteMode) {
+            System.out.print(message);
+        }
+    }
+
+    @Override
+    public void printError(String errorMessage){
+        System.err.print(errorMessage);
+    }
+
+    @Override
+    public void addCommandsToSimulator(ArrayList<String> commands) { emulatorBuffer.addAll(0, commands); }
+
+    @Override
+    public ArrayList<String> getLastSessionUserInput(){
+        return lastSessionUserInput;
+    }
+
+}

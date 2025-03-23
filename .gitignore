@@ -38,3 +38,4 @@ bin/
 /target/
 /src/main/java/laba5/misc/CamelToSnakeCaseConverter.java
 /src/main/java/laba5/misc/ReflectionParser.java
+/src/main/java/laba5/App.java
