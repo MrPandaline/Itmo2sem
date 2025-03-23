@@ -36,6 +36,7 @@ public class ModelBuilder {
 
     /** Метод, создающий объект класса Dragon по вводу пользователя.*/
     public Dragon buildDragon() {
+
         ioManager.printMessage("Введите имя дракона: ", inQuiteMode);
         String name = ioManager.getValidRawInput(Objects::nonNull);
         ioManager.printMessage("Введите координаты дракона: \n", inQuiteMode);

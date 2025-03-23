@@ -16,7 +16,7 @@ import java.util.LinkedList;
  * @version 1.0.1
  */
 public class RemoveGreater implements IServerSideCommand, IMultiLineCommand{
-    private ArrayDeque<Object> additionalUserInput = new ArrayDeque<>();
+    private final ArrayDeque<Object> additionalUserInput = new ArrayDeque<>();
 
     @Override
     public String getDescription() {
@@ -28,18 +28,21 @@ public class RemoveGreater implements IServerSideCommand, IMultiLineCommand{
     public Response execute(Server server, String[] args) {
         LinkedList<Dragon> linkedList = server.getCollectionManager().getCollection();
         //TODO: вот тут надо дополнительный ввод пользователя получить и вписать вот этот интерфейс
-        Dragon curDragon = new ModelBuilder(ioManager).buildDragon();
-        linkedList.removeIf(dragon -> curDragon.compareTo(dragon) < 0);
+
+        linkedList.removeIf(dragon -> ((Dragon) additionalUserInput.remove()).compareTo(dragon) < 0);
         return new Response(new ResponseClaster( outInQuiteMode,"Элементы большие, чем введённый, удалены."));
     }
 
     @Override
-    public ArrayDeque<Object> getAdditionalUserInput(IIOManager ioManager) {
-
+    public void getAdditionalUserInput(IIOManager ioManager) {
+        Dragon curDragon = new ModelBuilder(ioManager).buildDragon();
+        additionalUserInput.push(curDragon);
     }
 
+    /*
     @Override
     public void setAdditionalUserInput(ArrayDeque<Object> additionalUserInput) {
         this.additionalUserInput = additionalUserInput;
     }
+     */
 }

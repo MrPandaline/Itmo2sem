@@ -1,6 +1,5 @@
 package laba5.common.commands;
 
-import laba5.App;
 import laba5.client.Client;
 import laba5.client.input.IIOManager;
 

@@ -1,11 +1,13 @@
 package laba5.common.commands;
 
+import laba5.client.input.IIOManager;
 import laba5.common.dataExchanging.Response;
 import laba5.common.dataExchanging.ResponseClaster;
 import laba5.server.Server;
 import laba5.common.ModelBuilder;
 import laba5.common.model.Dragon;
 
+import java.util.ArrayDeque;
 import java.util.LinkedList;
 
 /**
@@ -13,7 +15,8 @@ import java.util.LinkedList;
  * @author Homoursus
  * @version 1.0
  */
-public class Update implements IServerSideCommand{
+public class Update implements IServerSideCommand, IMultiLineCommand{
+    private final ArrayDeque<Object> additionalUserInput = new ArrayDeque<>();
     @Override
     public String getDescription() {
         return "Позволяет обновить значение элемента коллекции, id которого равен заданному \nТребует ввода id";
@@ -32,8 +35,7 @@ public class Update implements IServerSideCommand{
             for(Dragon dragon : linkedList){
                 if (dragon.id() == id){
                     flag = true;
-                    Dragon newDragon = new ModelBuilder(app.getIoManager()).buildDragon();
-                    linkedList.set(linkedList.indexOf(dragon), newDragon);
+                    linkedList.set(linkedList.indexOf(dragon), (Dragon) additionalUserInput.remove());
                 }
                 //TODO: добавить вывод сообщения что элемент обновлён
             }
@@ -44,5 +46,11 @@ public class Update implements IServerSideCommand{
 
         }
         return new Response(new ResponseClaster(outInQuiteMode, sb.toString()));
+    }
+
+    @Override
+    public void getAdditionalUserInput(IIOManager ioManager) {
+        Dragon newDragon = new ModelBuilder(ioManager).buildDragon();
+        additionalUserInput.push(newDragon);
     }
 }

@@ -16,7 +16,7 @@ import java.util.ArrayDeque;
  */
 public class Add implements IServerSideCommand, IMultiLineCommand {
 
-    private ArrayDeque<Object> additionalUserInput = new ArrayDeque<>();
+    private final ArrayDeque<Object> additionalUserInput = new ArrayDeque<>();
 
     @Override
     public String getDescription() {
@@ -30,16 +30,11 @@ public class Add implements IServerSideCommand, IMultiLineCommand {
     }
 
     @Override
-    public ArrayDeque<Object> getAdditionalUserInput(IIOManager ioManager) {
+    public void getAdditionalUserInput(IIOManager ioManager) {
         //TODO: надо исправить ModelBuilder (не собирать дракона а передать поля на сервер, на котором его будут собирать)
         ModelBuilder handler = new ModelBuilder(ioManager);
         Dragon dragon = handler.buildDragon();
         additionalUserInput.push(dragon);
-        return additionalUserInput;
     }
 
-    @Override
-    public void setAdditionalUserInput(ArrayDeque<Object> additionalUserInput) {
-        this.additionalUserInput = additionalUserInput;
-    }
 }

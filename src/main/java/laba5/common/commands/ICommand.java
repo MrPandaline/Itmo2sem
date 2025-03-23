@@ -1,7 +1,5 @@
 package laba5.common.commands;
 
-import laba5.App;
-
 import java.io.Serializable;
 
 /**

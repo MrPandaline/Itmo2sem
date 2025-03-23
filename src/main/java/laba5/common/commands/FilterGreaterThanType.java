@@ -1,11 +1,12 @@
 package laba5.common.commands;
 
-import laba5.App;
-import laba5.client.input.IIOManager;
+import laba5.common.dataExchanging.Response;
+import laba5.common.dataExchanging.ResponseClaster;
 import laba5.common.model.Dragon;
 import laba5.common.model.modelEnums.DragonType;
 import laba5.server.Server;
 
+import java.util.ArrayDeque;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -16,49 +17,52 @@ import java.util.LinkedList;
  * @version 1.0.1
  */
 public class FilterGreaterThanType implements IServerSideCommand{
-
     @Override
     public String getDescription() {
         return "Вывести элементы, значение поля type которых, больше заданного\n" +
                 "Требует ввода значения поля type";
     }
 
-    //TODO: И КАК ЭТО КОНТРИТЬ.
     @Override
-    public void execute(Server server, String[] args) {
+    public Response execute(Server server, String[] args) {
 
         LinkedList<Dragon> linkedList = server.getCollectionManager().getCollection();
+        Response response;
         if (args.length == 0) {
-            annotate(ioManager);
+            response = annotate();
         } else {
             try{
+                StringBuilder sb = new StringBuilder();
                 DragonType dragonType = DragonType.valueOf(args[0].toUpperCase());
                 linkedList.sort(Comparator.comparing(Dragon::dragonType));
                 boolean flag = false;
                 for (Dragon dragon : linkedList) {
                     if (dragon.dragonType().compareTo(dragonType) > 0) {
                         flag = true;
-                        ioManager.printMessage(dragon + "\n", true);
+                        sb.append(dragon).append("\n");
                     }
                 }
                 if (!flag) {
-                    ioManager.printMessage("Нет элементов коллекции, чьё значение пол type превышает заданное!\n", true);
+                    sb.append("Нет элементов коллекции, чьё значение пол type превышает заданное!\n");
                 }
                 Collections.sort(linkedList);
+                response = new Response(new ResponseClaster(true, sb.toString()));
             }
             catch (IllegalArgumentException e){
-               annotate(ioManager);
+               response = annotate();
             }
-
         }
+        return response;
     }
-    private void annotate(IIOManager ioManager) {
-        ioManager.printMessage("Вы не верно ввели значение поля type! \n", outInQuiteMode);
+    private Response annotate() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Вы не верно ввели значение поля type! \n");
 
-        ioManager.printMessage("Доступные типы: " , outInQuiteMode);
+        sb.append("Доступные типы: ");
         for (DragonType dragonType : DragonType.values()) {
-            ioManager.printMessage(dragonType.toString() + " ", outInQuiteMode);
+            sb.append(dragonType.toString()).append(" ");
         }
-        ioManager.printMessage("\n", outInQuiteMode);
+        sb.append("\n");
+        return new Response(new ResponseClaster(outInQuiteMode, sb.toString()));
     }
 }
