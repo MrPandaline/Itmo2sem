@@ -16,6 +16,7 @@ import laba5.server.storage.OnCrashStorageWriter;
 import java.io.*;
 import java.net.*;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Класс, объединяющий все клиентские модули.
@@ -55,6 +56,10 @@ public class Client {
      */
     private final CommandsListStoragingManager lastSessionUserInputStoragingManager;
 
+    private static final int MAX_RECONNECT_ATTEMPTS = 5;
+    private static final int RECONNECT_DELAY_MS = 5000;
+    private static final int SOCKET_TIMEOUT_MS = 10000;
+
     /**
      * Конструктор клиентов. Инициализирует всех его менеджеров.
      * @param ioManager класс-реализация менеджера управления вводом-выводом.
@@ -72,23 +77,40 @@ public class Client {
     private Object communicateWithServer(Request request) throws IOException {
         InetAddress host = InetAddress.getLocalHost();
         int port = Configuration.SERVER_PORT;
-        while (true){
-            try (Socket socket = new Socket(host, port)){
+        int attempts = 0;
+
+        while (attempts < MAX_RECONNECT_ATTEMPTS) {
+            try (Socket socket = new Socket()) {
+                socket.connect(new InetSocketAddress(host, port), SOCKET_TIMEOUT_MS);
+                socket.setSoTimeout(SOCKET_TIMEOUT_MS);
+
                 ObjectOutputStream os = new ObjectOutputStream(socket.getOutputStream());
                 ObjectInputStream is = new ObjectInputStream(socket.getInputStream());
+
                 os.writeObject(request);
+                os.flush();
+
                 return is.readObject();
             } catch (ConnectException e) {
-                ioManager.printError("Сервер недоступен. Пытаюсь переподключиться через 5 секунд.\n");
+                attempts++;
+                ioManager.printError(String.format("Сервер недоступен. Попытка %d из %d. Ожидание %d секунд...\n",
+                        attempts, MAX_RECONNECT_ATTEMPTS, RECONNECT_DELAY_MS / 1000));
+                try {
+                    TimeUnit.MILLISECONDS.sleep(RECONNECT_DELAY_MS);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw new IOException("Прерывание при ожидании переподключения", ie);
+                }
+            } catch (SocketTimeoutException e) {
+                attempts++;
+                ioManager.printError(String.format("Превышено время ожидания ответа от сервера. Попытка %d из %d\n",
+                        attempts, MAX_RECONNECT_ATTEMPTS));
             } catch (ClassNotFoundException e) {
-                ioManager.printError("Сервер втирает нам какую-то дичь. " +
-                        "Пожалуйста не вините его и повторите последний ввод\n");
-            } try {
-                Thread.sleep(5000); // TODO: Понять чего он ругается.
-            } catch (InterruptedException ex) {
-                ioManager.printError("Не получается установить задержку между переподключениями.");
+                ioManager.printError("Ошибка при десериализации ответа от сервера. Пожалуйста, повторите запрос.\n");
+                throw new IOException("Ошибка десериализации", e);
             }
         }
+        throw new IOException("Не удалось установить соединение с сервером после " + MAX_RECONNECT_ATTEMPTS + " попыток");
     }
 
     /**
@@ -131,10 +153,13 @@ public class Client {
                     }
                     if (command instanceof IClientSideCommand) {
                         ((IClientSideCommand) command).execute(this, args);
-                    }
-                    if (command instanceof IServerSideCommand) {
-                        Object response = communicateWithServer(new Request(command, args, haveAdditionalInf, addInf));
-                        ioManager.printMessage((String) response, true);
+                    } else if (command instanceof IServerSideCommand) {
+                        try {
+                            Object response = communicateWithServer(new Request(command, args, haveAdditionalInf, addInf));
+                            ioManager.printMessage((String) response, true);
+                        } catch (IOException e) {
+                            ioManager.printError("Ошибка при общении с сервером: " + e.getMessage() + "\n");
+                        }
                     }
 
                     this.lastUsedCommands.add(splittedInput[0]);
