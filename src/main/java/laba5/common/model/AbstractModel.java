@@ -1,5 +1,6 @@
 package laba5.common.model;
 
+import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
@@ -7,7 +8,7 @@ import java.lang.reflect.Modifier;
  * Класс, который наследуют все классы модели.
  * @version 1.0
  */
-public abstract class AbstractModel {
+public abstract class AbstractModel implements Serializable {
     @Override
     public String toString() {
         final String SEPARATOR = "----------------------------------------------------------\n";

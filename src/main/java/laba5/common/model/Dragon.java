@@ -3,11 +3,13 @@ package laba5.common.model;
 import laba5.common.model.modelEnums.DragonCharacter;
 import laba5.common.model.modelEnums.DragonType;
 
+import java.io.Serializable;
+
 /**
  * Класс, хранящий дракона. Он содержится в коллекции. Реализует интерфейс Comparable.
  * @version 1.1
  */
-public class Dragon extends AbstractModel implements Comparable<Dragon> {
+public class Dragon extends AbstractModel implements Comparable<Dragon>, Serializable {
     /**
      * Генератор id генерирует просто последовательные числа, начиная с последнего использованного.
      */

@@ -1,11 +1,13 @@
 package laba5.common.model;
 
+import java.io.Serializable;
+
 /**
  * Класс, хранящий локацию. Используется в модели.
  * @see Person
  * @version 1.1
  */
-public class Location extends AbstractModel{
+public class Location extends AbstractModel implements Serializable{
     /**
      * Координата x локации.
      */

@@ -1,11 +1,13 @@
 package laba5.common.model;
 
+import java.io.Serializable;
+
 /**
  * Класс, хранящий координаты. Используется в модели.
  * @see Dragon
  * @version 1.1
  */
-public class Coordinates extends AbstractModel{
+public class Coordinates extends AbstractModel implements Serializable {
     /**
      * Координата x
      * Значение должно быть больше -589

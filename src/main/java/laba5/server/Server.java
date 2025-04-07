@@ -1,9 +1,9 @@
 package laba5.server;
 
 import laba5.common.Configuration;
-import laba5.common.commands.IServerSideCommand;
 import laba5.common.dataExchanging.Request;
 import laba5.common.dataExchanging.Response;
+import laba5.common.dataExchanging.ResponseClaster;
 import laba5.server.logging.IServerLogger;
 import laba5.server.logic.CollectionManager;
 import laba5.common.model.Dragon;
@@ -23,7 +23,9 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class Server {
 
-    private static final Map<SocketChannel, Queue<Object>> clientQueues = new ConcurrentHashMap<>();
+    private static final Map<SocketChannel, Queue<Object>> clientResponseQueues = new ConcurrentHashMap<>();
+    private static final Map<SocketChannel, ByteBuffer> clientRequestBuffers = new ConcurrentHashMap<>();
+    private static final Map<SocketChannel, Integer> expectedSizes = new ConcurrentHashMap<>();
     /**
      * Менеджер управления коллекцией.
      * @see CollectionManager
@@ -41,7 +43,7 @@ public class Server {
      * */
     private boolean isServerRunning = true;
 
-    private static final int BUFFER_SIZE = 8192; // Увеличенный размер буфера для больших объектов
+    private static final int BUFFER_SIZE = 4096; // Увеличенный размер буфера для больших объектов
 
     /**
      * Конструктор сервера. Инициализирует всех серверных менеджеров.
@@ -68,7 +70,7 @@ public class Server {
 
         while (isServerRunning) {
             try {
-                selector.select(100); // Добавляем таймаут для более плавного завершения
+                selector.select(100);
                 Set<SelectionKey> selectedKeys = selector.selectedKeys();
                 Iterator<SelectionKey> keys = selectedKeys.iterator();
 
@@ -91,6 +93,7 @@ public class Server {
             } catch (IOException e) {
                 System.err.println("Ошибка при обработке соединения: " + e.getMessage());
                 e.printStackTrace();
+                System.exit(0);
             }
         }
     }
@@ -99,28 +102,72 @@ public class Server {
         SocketChannel clientChannel = serverChannel.accept();
         clientChannel.configureBlocking(false);
         clientChannel.register(selector, SelectionKey.OP_READ);
-        clientQueues.put(clientChannel, new LinkedList<>());
+        clientResponseQueues.put(clientChannel, new LinkedList<>());
+        clientRequestBuffers.put(clientChannel, ByteBuffer.allocate(BUFFER_SIZE));
         System.out.println("Client connected: " + clientChannel.getRemoteAddress());
     }
 
     private void readFromClient(SelectionKey key) throws IOException {
         SocketChannel clientChannel = (SocketChannel) key.channel();
-        ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
+        ByteBuffer buffer = clientRequestBuffers.get(clientChannel);
+        System.out.println(Arrays.toString(buffer.array()));
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        int objectSize;
+        clientChannel.read(buffer);
+        System.out.println(Arrays.toString(buffer.array()));
         int bytesRead = clientChannel.read(buffer);
-
         if (bytesRead == -1) {
             closeClientConnection(clientChannel, key);
             return;
         }
 
         buffer.flip();
+
+        // Если мы еще не знаем размер объекта, считываем его
+        if (!expectedSizes.containsKey(clientChannel)) {
+            if (buffer.remaining() < 10) {
+                // Недостаточно данных для чтения размера
+                buffer.compact();
+                return;
+            }
+
+            // Считываем размер объекта
+            buffer.position(6);
+            objectSize = buffer.getInt();
+            expectedSizes.put(clientChannel, objectSize);
+        }
+
+        int expectedSize = expectedSizes.get(clientChannel);
+        System.out.println(expectedSize);
+        ByteBuffer objectBuffer = ByteBuffer.allocate(expectedSize);
+
+        for (int i = 0; i < expectedSize-4; i++) {
+            byte b = buffer.get();
+            objectBuffer.put(b);
+        }
+
+        if (objectBuffer.position() < expectedSize-4) {
+            // Объект еще не полностью получен
+            buffer.compact();
+            return;
+        }
+
+        // Объект полностью получен, десериализуем его
+        objectBuffer.flip();
+        //System.out.println(Arrays.toString(objectBuffer.array()));
+
         try {
-            ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(buffer.array(), 0, buffer.limit()));
+            byte[] result = new byte[objectBuffer.array().length + 4];
+            System.arraycopy(new byte[]{-84, -19, 0, 5}, 0, result, 0,4);
+            System.arraycopy(objectBuffer.array(), 0, result, 4,objectBuffer.array().length);
+            ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(result));
             Request request = (Request) ois.readObject();
             System.out.println("Получен запрос от " + clientChannel.getRemoteAddress() + ": " + request);
 
-            Response response = ((IServerSideCommand) request.command()).execute(this, request.args());
-            clientQueues.get(clientChannel).add(response);
+            Response response = request.command().execute(this, request.args());
+            System.out.println(response);
+
+            clientResponseQueues.get(clientChannel).add(response);
             key.interestOps(SelectionKey.OP_WRITE);
         } catch (ClassNotFoundException e) {
             System.err.println("Ошибка при десериализации запроса: " + e.getMessage());
@@ -131,21 +178,27 @@ public class Server {
 
     private void writeToClient(SelectionKey key) throws IOException {
         SocketChannel clientChannel = (SocketChannel) key.channel();
-        Queue<Object> queue = clientQueues.get(clientChannel);
+        Queue<Object> queue = clientResponseQueues.get(clientChannel);
 
         if (!queue.isEmpty()) {
             Object data = queue.poll();
+            System.out.println("Ответ клиенту: " + data);
             try {
                 ByteArrayOutputStream bos = new ByteArrayOutputStream();
                 ObjectOutputStream oos = new ObjectOutputStream(bos);
-                oos.writeObject(data);
                 oos.flush();
+                oos.writeObject(data);
 
                 ByteBuffer buffer = ByteBuffer.wrap(bos.toByteArray());
                 clientChannel.write(buffer);
 
-                if (queue.isEmpty()) {
+                System.out.println("Данные клиенту отправил");
+
+                if (!queue.isEmpty()) {
                     key.interestOps(SelectionKey.OP_READ);
+                }
+                else {
+                    closeClientConnection(clientChannel, key);
                 }
             } catch (IOException e) {
                 System.err.println("Ошибка при отправке ответа клиенту: " + e.getMessage());
@@ -156,10 +209,13 @@ public class Server {
     }
 
     private void closeClientConnection(SocketChannel clientChannel, SelectionKey key) throws IOException {
-        clientQueues.remove(clientChannel);
+        clientResponseQueues.remove(clientChannel);
+        clientRequestBuffers.remove(clientChannel);
+        System.out.println("Клиент отключился: " + clientChannel.getRemoteAddress());
+        clientChannel.finishConnect();
         clientChannel.close();
         key.cancel();
-        System.out.println("Клиент отключился: " + clientChannel.getRemoteAddress());
+
     }
 
     /**

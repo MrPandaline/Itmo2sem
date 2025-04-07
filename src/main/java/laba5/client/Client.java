@@ -6,6 +6,7 @@ import laba5.common.commands.ICommand;
 import laba5.common.commands.IMultiLineCommand;
 import laba5.common.commands.IServerSideCommand;
 import laba5.common.dataExchanging.Request;
+import laba5.common.dataExchanging.Response;
 import laba5.common.exceptions.CommandNotFound;
 import laba5.common.exceptions.UnplannedAppTermination;
 import laba5.client.input.IIOManager;
@@ -15,6 +16,7 @@ import laba5.server.storage.OnCrashStorageWriter;
 
 import java.io.*;
 import java.net.*;
+import java.nio.Buffer;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -58,7 +60,7 @@ public class Client {
 
     private static final int MAX_RECONNECT_ATTEMPTS = 5;
     private static final int RECONNECT_DELAY_MS = 5000;
-    private static final int SOCKET_TIMEOUT_MS = 10000;
+    private static final int SOCKET_TIMEOUT_MS = 5000;
 
     /**
      * Конструктор клиентов. Инициализирует всех его менеджеров.
@@ -84,13 +86,29 @@ public class Client {
                 socket.connect(new InetSocketAddress(host, port), SOCKET_TIMEOUT_MS);
                 socket.setSoTimeout(SOCKET_TIMEOUT_MS);
 
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                ObjectOutputStream sizeCheckBos = new ObjectOutputStream(bos);
+                sizeCheckBos.writeObject(request);
                 ObjectOutputStream os = new ObjectOutputStream(socket.getOutputStream());
-                ObjectInputStream is = new ObjectInputStream(socket.getInputStream());
+                //System.out.println(Arrays.toString(bos.toByteArray()));
+                int objectSize = bos.toByteArray().length;
+
+                os.writeInt(objectSize);
+                os.flush();
 
                 os.writeObject(request);
                 os.flush();
 
-                return is.readObject();
+                //System.out.println("Объект отправлен: " + request);
+
+                ObjectInputStream is = new ObjectInputStream(socket.getInputStream());
+                //System.out.println("Получил канал от сервера!");
+
+                Response resp = (Response) is.readObject();
+
+                //System.out.println(resp);
+                attempts = MAX_RECONNECT_ATTEMPTS;
+                return resp;
             } catch (ConnectException e) {
                 attempts++;
                 ioManager.printError(String.format("Сервер недоступен. Попытка %d из %d. Ожидание %d секунд...\n",
@@ -153,12 +171,13 @@ public class Client {
                     }
                     if (command instanceof IClientSideCommand) {
                         ((IClientSideCommand) command).execute(this, args);
-                    } else if (command instanceof IServerSideCommand) {
+                    }
+                    else if (command instanceof IServerSideCommand) {
                         try {
-                            Object response = communicateWithServer(new Request(command, args, haveAdditionalInf, addInf));
-                            ioManager.printMessage((String) response, true);
+                            Object response = communicateWithServer(new Request((IServerSideCommand) command, args, haveAdditionalInf, addInf));
+                            ioManager.printMessage(((Response) response).responseClaster().message(), ((Response) response).responseClaster().willBeInQuiteMode());
                         } catch (IOException e) {
-                            ioManager.printError("Ошибка при общении с сервером: " + e.getMessage() + "\n");
+                            ioManager.printError("Ошибка при общении с сервером: " + e.fillInStackTrace() + "\n");
                         }
                     }
 

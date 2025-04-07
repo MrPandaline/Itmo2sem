@@ -3,13 +3,15 @@ package laba5.common.model;
 import laba5.common.model.modelEnums.Color;
 import laba5.common.model.modelEnums.Country;
 
+import java.io.Serializable;
+
 /**
  * Класс, хранящий какое-либо лицо. Реализует интерфейс Comparable для сортировки.
  * Используется в модели.
  * @see Dragon
  * @version 1.0
  */
-public class Person extends AbstractModel implements Comparable<Person> {
+public class Person extends AbstractModel implements Comparable<Person>, Serializable {
     /**
      * Имя лица.
      * Не может быть null, Строка не может быть пустой.
