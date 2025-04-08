@@ -1,9 +1,10 @@
 package laba5.server;
 
 import laba5.common.Configuration;
+import laba5.common.commands.IServerSideCommand;
+import laba5.common.commands.Save;
 import laba5.common.dataExchanging.Request;
 import laba5.common.dataExchanging.Response;
-import laba5.common.dataExchanging.ResponseClaster;
 import laba5.server.logging.IServerLogger;
 import laba5.server.logic.CollectionManager;
 import laba5.common.model.Dragon;
@@ -43,7 +44,7 @@ public class Server {
      * */
     private boolean isServerRunning = true;
 
-    private static final int BUFFER_SIZE = 4096; // Увеличенный размер буфера для больших объектов
+    private static final int BUFFER_SIZE = 10096; // Увеличенный размер буфера для больших объектов
 
     /**
      * Конструктор сервера. Инициализирует всех серверных менеджеров.
@@ -165,6 +166,8 @@ public class Server {
             System.out.println("Получен запрос от " + clientChannel.getRemoteAddress() + ": " + request);
 
             Response response = request.command().execute(this, request.args());
+            IServerSideCommand save = new Save();
+            save.execute(this, request.args());
             System.out.println(response);
 
             clientResponseQueues.get(clientChannel).add(response);

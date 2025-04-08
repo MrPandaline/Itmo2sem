@@ -37,7 +37,7 @@
 							</descriptorRefs>
 							<archive>
 								<manifest>
-									<mainClass>laba5.Main</mainClass>
+									<mainClass>laba5.server.Main</mainClass>
 								</manifest>
 							</archive>
 						</configuration>
@@ -51,7 +51,7 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>laba5.Main</mainClass>
+							<mainClass>laba5.server.Main</mainClass>
 						</manifest>
 						<manifestEntries>
 							<Built-By>${user.name}</Built-By> <!-- Имя пользователя, собравшего проект -->

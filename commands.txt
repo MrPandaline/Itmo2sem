@@ -1,4 +1,4 @@
 remove_head
-hist
+history
 
 execute_script add_dragon.txt

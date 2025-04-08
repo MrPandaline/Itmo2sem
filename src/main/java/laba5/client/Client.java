@@ -77,7 +77,9 @@ public class Client {
     }
 
     private Object communicateWithServer(Request request) throws IOException {
-        InetAddress host = InetAddress.getLocalHost();
+        //InetAddress host = InetAddress.getLocalHost();
+        InetAddress host = InetAddress.getByName("103.90.75.212");
+        //InetAddress host = InetAddress.getByName("se.ifmo.ru");
         int port = Configuration.SERVER_PORT;
         int attempts = 0;
 
