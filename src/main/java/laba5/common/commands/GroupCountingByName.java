@@ -5,9 +5,8 @@ import laba5.common.dataExchanging.ResponseClaster;
 import laba5.common.model.Dragon;
 import laba5.server.Server;
 
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Класс команды, реализующий группировку элементов коллекции по имени дракона.
@@ -27,22 +26,12 @@ public class GroupCountingByName implements IServerSideCommand{
         LinkedList<Dragon> linkedList = server.getCollectionManager().getCollection();
         linkedList.sort(Comparator.comparing(Dragon::name));
 
-        HashMap<String, Integer> countMap = new HashMap<>();
+    String result = linkedList.stream()
+            .collect(Collectors.groupingBy(Dragon::name, Collectors.counting())).entrySet().stream()
+            .sorted(Map.Entry.comparingByKey())
+            .map(entry -> "Элементов коллекции с именем " + entry.getKey() + ": " + entry.getValue())
+            .collect(Collectors.joining("\n"));
 
-        StringBuilder sb = new StringBuilder();
-
-        for (Dragon dragon : linkedList) {
-            if (countMap.containsKey(dragon.name())) {
-                countMap.put(dragon.name(), countMap.get(dragon.name()) + 1);
-            }
-            else{
-                countMap.put(dragon.name(), 1);
-            }
-        }
-        for (String name : countMap.keySet()) {
-            sb.append("Элементов коллекции с именем ").append(name).append(": ")
-                    .append(countMap.get(name)).append("\n");
-        }
-        return new Response(new ResponseClaster(outInQuiteMode, sb.toString()));
+        return new Response(new ResponseClaster(outInQuiteMode, result));
     }
 }

@@ -28,6 +28,7 @@ public class RemoveById implements IServerSideCommand{
             quiteMode = false;
         } else {
             int id = Integer.parseInt(args[0]);
+            // Можно тоже под stream API переделать, но зачем?
             if (linkedList.removeIf(dragon -> dragon.id() == id)) {
                 sb.append("Элемент коллекции удалён!\n");
             }

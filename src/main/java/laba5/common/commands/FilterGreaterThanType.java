@@ -10,6 +10,7 @@ import java.util.ArrayDeque;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
+import java.util.stream.Collectors;
 
 /**
  * Класс команды, реализующий вывод элементов коллекции, значение поля type которых, передано в команду.
@@ -32,21 +33,18 @@ public class FilterGreaterThanType implements IServerSideCommand{
             response = annotate();
         } else {
             try{
-                StringBuilder sb = new StringBuilder();
                 DragonType dragonType = DragonType.valueOf(args[0].toUpperCase());
-                linkedList.sort(Comparator.comparing(Dragon::dragonType));
-                boolean flag = false;
-                for (Dragon dragon : linkedList) {
-                    if (dragon.dragonType().compareTo(dragonType) > 0) {
-                        flag = true;
-                        sb.append(dragon).append("\n");
-                    }
-                }
-                if (!flag) {
-                    sb.append("Нет элементов коллекции, чьё значение пол type превышает заданное!\n");
+                String result = linkedList.stream()
+                        .sorted(Comparator.comparing(Dragon::dragonType))
+                        .filter(dragon -> dragon.dragonType().compareTo(dragonType) > 0)
+                        .map(Object::toString)
+                        .collect(Collectors.joining("\n"));
+
+                if (result.isEmpty()) {
+                    result = "Нет элементов коллекции, чьё значение пол type превышает заданное!\n";
                 }
                 Collections.sort(linkedList);
-                response = new Response(new ResponseClaster(true, sb.toString()));
+                response = new Response(new ResponseClaster(true, result));
             }
             catch (IllegalArgumentException e){
                response = annotate();

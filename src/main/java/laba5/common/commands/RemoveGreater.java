@@ -38,11 +38,4 @@ public class RemoveGreater implements IServerSideCommand, IMultiLineCommand{
         Dragon curDragon = new ModelBuilder(ioManager).buildDragon();
         additionalUserInput.push(curDragon);
     }
-
-    /*
-    @Override
-    public void setAdditionalUserInput(ArrayDeque<Object> additionalUserInput) {
-        this.additionalUserInput = additionalUserInput;
-    }
-     */
 }

@@ -25,10 +25,15 @@ public class Info implements IServerSideCommand{
         ZonedDateTime time = collectionManager.getCollectionInitializationTime();
         StringBuilder stringBuilder = new StringBuilder();
 
-        stringBuilder.append("Тип коллекции: ").append(collectionManager.getCollectionType().getSimpleName()).append("\n");
-        stringBuilder.append("Время инициализации коллекции: ").append(time.toString(), 0, 10).append(" ")
-                .append(time.toString(), 11, 19).append("\n");
-        stringBuilder.append("Размер коллекции: ").append(collectionManager.getCollection().size()).append("\n");
+        stringBuilder
+                .append("Тип коллекции: ")
+                .append(collectionManager.getCollectionType().getSimpleName())
+                .append("\n")
+                .append("Время инициализации коллекции: ")
+                .append(time.toString(), 0, 10).append(" ")
+                .append(time.toString(), 11, 19).append("\n")
+                .append("Размер коллекции: ").append(collectionManager.getCollection().size())
+                .append("\n");
         if (!collectionManager.getCollection().isEmpty()) {
             stringBuilder.append("Класс, экземпляры которого содержатся в коллекции: ").append(collectionManager
                     .getCollection().iterator().next().getClass().getSimpleName()).append("\n");

@@ -18,6 +18,7 @@ public class Help implements IClientSideCommand{
         IIOManager ioManager = client.getIoManager();
         ICommand[] commands = client.getCommandManager().getCommands();
         final String SEPARATOR = "-----------------------------------------------------------------------\n";
+        // Можно переписать с помощью forEach, но надо ли?
         for (ICommand command : commands) {
             ioManager.printMessage(SEPARATOR, outInQuiteMode);
             ioManager.printMessage(command.getClass().getSimpleName().replaceAll("([a-z])([A-Z])",
