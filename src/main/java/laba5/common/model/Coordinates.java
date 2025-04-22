@@ -29,4 +29,5 @@ public class Coordinates extends AbstractModel implements Serializable {
     public int y() {
         return y;
     }
+
 }

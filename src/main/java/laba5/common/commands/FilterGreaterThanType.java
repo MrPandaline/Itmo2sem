@@ -3,6 +3,7 @@ package laba5.common.commands;
 import laba5.common.dataExchanging.Response;
 import laba5.common.dataExchanging.ResponseClaster;
 import laba5.common.model.Dragon;
+import laba5.common.model.User;
 import laba5.common.model.modelEnums.DragonType;
 import laba5.server.Server;
 
@@ -25,10 +26,11 @@ public class FilterGreaterThanType implements IServerSideCommand{
     }
 
     @Override
-    public Response execute(Server server, String[] args) {
+    public Response execute(Server server, String[] args, User user) {
 
         LinkedList<Dragon> linkedList = server.getCollectionManager().getCollection();
         Response response;
+        int responseCode = 200;
         if (args.length == 0) {
             response = annotate();
         } else {
@@ -42,9 +44,10 @@ public class FilterGreaterThanType implements IServerSideCommand{
 
                 if (result.isEmpty()) {
                     result = "Нет элементов коллекции, чьё значение пол type превышает заданное!\n";
+                    responseCode = 404;
                 }
                 Collections.sort(linkedList);
-                response = new Response(new ResponseClaster(true, result));
+                response = new Response(responseCode, new ResponseClaster(true, result));
             }
             catch (IllegalArgumentException e){
                response = annotate();
@@ -61,6 +64,6 @@ public class FilterGreaterThanType implements IServerSideCommand{
             sb.append(dragonType.toString()).append(" ");
         }
         sb.append("\n");
-        return new Response(new ResponseClaster(outInQuiteMode, sb.toString()));
+        return new Response(401, new ResponseClaster(outInQuiteMode, sb.toString()));
     }
 }

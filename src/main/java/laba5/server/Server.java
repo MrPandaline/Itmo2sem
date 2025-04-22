@@ -1,19 +1,25 @@
 package laba5.server;
 
+import jdk.jshell.Snippet;
 import laba5.common.Configuration;
+import laba5.common.commands.IClientSideCommand;
 import laba5.common.commands.IServerSideCommand;
 import laba5.common.commands.Save;
 import laba5.common.dataExchanging.Request;
 import laba5.common.dataExchanging.Response;
+import laba5.common.dataExchanging.ResponseClaster;
+import laba5.common.model.User;
 import laba5.server.logging.IServerLogger;
 import laba5.server.logic.CollectionManager;
 import laba5.common.model.Dragon;
+import laba5.server.logic.DBManager;
 import laba5.server.storage.IModelStorageManager;
 
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -31,7 +37,7 @@ public class Server {
      * Менеджер управления коллекцией.
      * @see CollectionManager
      * */
-    private final CollectionManager<Dragon> collectionManager;
+    private final CollectionManager collectionManager;
 
     /**
      * Менеджер работы с записью коллекции в хранилище.
@@ -39,21 +45,25 @@ public class Server {
      * */
     private final IModelStorageManager storageManager;
 
+    private final DBManager dbManager;
+
     /**
      * Флаг состояния, показывающий, включен ли сервер.
      * */
     private boolean isServerRunning = true;
 
-    private static final int BUFFER_SIZE = 10096; // Увеличенный размер буфера для больших объектов
+    private static final int BUFFER_SIZE = 8196; // Увеличенный размер буфера для больших объектов
 
     /**
      * Конструктор сервера. Инициализирует всех серверных менеджеров.
      * @param storageManager класс-реализация менеджера управления хранением коллекции.
      * */
-    public Server(IModelStorageManager storageManager, IServerLogger logger) {
+    public Server(IModelStorageManager storageManager, IServerLogger logger, DBManager dbManager) {
         this.storageManager = storageManager;
-        this.collectionManager = new CollectionManager<>(new LinkedList<>());
+        this.dbManager = dbManager;
+        this.collectionManager = new CollectionManager(dbManager);
         Dragon.setIdGenerator(storageManager.getNextID());
+        //TODO: Вот это надо убрать и вообще storageManager выпилить целиком.
         collectionManager.setCollection(storageManager.readFromStorage(logger));
         Collections.sort(collectionManager.getCollection());
     }
@@ -62,7 +72,7 @@ public class Server {
      * Метод, запускающий сервер.
      */
     public void run() throws IOException {
-        System.out.println("Server starting...");
+        System.out.println("Сервер Запускается...");
         Selector selector = Selector.open();
         ServerSocketChannel serverChannel = ServerSocketChannel.open();
         serverChannel.bind(new InetSocketAddress(Configuration.SERVER_PORT));
@@ -93,7 +103,6 @@ public class Server {
                 }
             } catch (IOException e) {
                 System.err.println("Ошибка при обработке соединения: " + e.getMessage());
-                e.printStackTrace();
                 System.exit(0);
             }
         }
@@ -112,7 +121,6 @@ public class Server {
         SocketChannel clientChannel = (SocketChannel) key.channel();
         ByteBuffer buffer = clientRequestBuffers.get(clientChannel);
         System.out.println(Arrays.toString(buffer.array()));
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
         int objectSize;
         clientChannel.read(buffer);
         System.out.println(Arrays.toString(buffer.array()));
@@ -165,9 +173,47 @@ public class Server {
             Request request = (Request) ois.readObject();
             System.out.println("Получен запрос от " + clientChannel.getRemoteAddress() + ": " + request);
 
-            Response response = request.command().execute(this, request.args());
+            Response response;
+            if (request.command() != null) {
+                response = request.command().execute(this, request.args(), request.user());
+            }
+            //TODO: Заставить правильно работать код с юзером.
+            else {
+                User clientUser = request.user();
+                long status = -1;
+                String responseMessage = null;
+                boolean completed = dbManager.insertUser(clientUser);
+                LinkedList<User> users = dbManager.selectUser();
+                Optional<Long> userId = users.stream().filter(user -> user.login()
+                        .equals(clientUser.login())).map(User::id).findFirst();
+
+                if (completed) {
+                    status = userId.get();
+                    responseMessage = "Вы зарегистрированы!";
+                } else {
+                    boolean flag = false;
+                    for (User user : users) {
+                        if (user.login().equals(clientUser.login())) {
+                            if (user.password().equals(clientUser.password())) {
+                                status = userId.get();
+                                responseMessage = "Вы авторизованы!";
+                            }
+                            else {
+                                status = 401;
+                                responseMessage = "Пароль неверный!";
+                            }
+                            flag = true;
+                        }
+                    }
+                    if (!flag){
+                        status = 404;
+                        responseMessage = "Произошла ошибка при вставке пользователя в таблицу! Повторите попытку.";
+                    }
+                }
+                response = new Response(status, new ResponseClaster(false, responseMessage));
+            }
             IServerSideCommand save = new Save();
-            save.execute(this, request.args());
+            save.execute(this, request.args(), new User("",""));
             System.out.println(response);
 
             clientResponseQueues.get(clientChannel).add(response);
@@ -176,6 +222,8 @@ public class Server {
             System.err.println("Ошибка при десериализации запроса: " + e.getMessage());
             e.printStackTrace();
             closeClientConnection(clientChannel, key);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -224,7 +272,7 @@ public class Server {
     /**
      * Метод, возвращающий используемый менеджер управления коллекцией.
      * */
-    public CollectionManager<Dragon> getCollectionManager() {
+    public CollectionManager getCollectionManager() {
         return collectionManager;
     }
 

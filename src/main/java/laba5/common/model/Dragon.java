@@ -61,6 +61,8 @@ public class Dragon extends AbstractModel implements Comparable<Dragon>, Seriali
      * Может быть null.
      */
     private Person killer; //Поле может быть null
+
+    private long creatorId;
     
     { 
         this.id = idGenerator++;
@@ -91,6 +93,19 @@ public class Dragon extends AbstractModel implements Comparable<Dragon>, Seriali
         this.creationDate = creationDate;
     }
 
+    public Dragon(String name, Coordinates coordinates, long age, String description,
+                  DragonType type, DragonCharacter character, Person killer, long id, java.time.ZonedDateTime creationDate, long creatorId) {
+        this(name, coordinates, age, description, type, character, killer, id, creationDate);
+        this.creatorId = creatorId;
+    }
+
+    public Dragon(String name, Coordinates coordinates, long age, String description,
+                  DragonType type, DragonCharacter character, Person killer, long creatorId) {
+        this(name, coordinates, age, description, type, character, killer);
+        this.creatorId = creatorId;
+    }
+
+
     public DragonCharacter dragonCharacter() {
         return character;
     }
@@ -111,6 +126,10 @@ public class Dragon extends AbstractModel implements Comparable<Dragon>, Seriali
         return id;
     }
 
+    public void id(long id) {
+        this.id = id;
+    }
+
     public Person killer() {
         return killer;
     }
@@ -124,6 +143,10 @@ public class Dragon extends AbstractModel implements Comparable<Dragon>, Seriali
     }
 
     public java.time.ZonedDateTime creationDate() { return creationDate; }
+
+    public long creatorId() { return creatorId;}
+
+    public void resetID() { id = idGenerator++; }
 
     /** Устанавливает значения, начиная с которого будут генерироваться id элементов коллекции*/
     public static void setIdGenerator(long idGenerator) {

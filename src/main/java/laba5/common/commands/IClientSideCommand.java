@@ -1,6 +1,7 @@
 package laba5.common.commands;
 
 import laba5.client.Client;
+import laba5.common.model.User;
 
 public interface IClientSideCommand extends ICommand{
     /**

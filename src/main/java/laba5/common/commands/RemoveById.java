@@ -3,6 +3,7 @@ package laba5.common.commands;
 import laba5.common.dataExchanging.Response;
 import laba5.common.dataExchanging.ResponseClaster;
 import laba5.common.model.Dragon;
+import laba5.common.model.User;
 import laba5.server.Server;
 
 import java.util.LinkedList;
@@ -19,23 +20,26 @@ public class RemoveById implements IServerSideCommand{
     }
 
     @Override
-    public Response execute(Server server, String[] args) {
-        LinkedList<Dragon> linkedList = server.getCollectionManager().getCollection();
+    public Response execute(Server server, String[] args, User user) {
         StringBuilder sb = new StringBuilder();
         boolean quiteMode = outInQuiteMode;
+        int status;
         if (args.length == 0) {
             sb.append("Вы не ввели id элемента коллекции!\n");
             quiteMode = false;
+            status = 401;
         } else {
             int id = Integer.parseInt(args[0]);
             // Можно тоже под stream API переделать, но зачем?
-            if (linkedList.removeIf(dragon -> dragon.id() == id)) {
+            if (server.getCollectionManager().remove(dragon -> dragon.id() == id, user)) {
                 sb.append("Элемент коллекции удалён!\n");
+                status = 200;
             }
             else {
                 sb.append("Нет элементов коллекции с таким индексом!\n");
+                status = 404;
             }
         }
-        return new Response(new ResponseClaster(quiteMode, sb.toString()));
+        return new Response(status, new ResponseClaster(quiteMode, sb.toString()));
     }
 }

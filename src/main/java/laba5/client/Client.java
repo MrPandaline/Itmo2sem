@@ -10,13 +10,13 @@ import laba5.common.dataExchanging.Response;
 import laba5.common.exceptions.CommandNotFound;
 import laba5.common.exceptions.UnplannedAppTermination;
 import laba5.client.input.IIOManager;
+import laba5.common.model.User;
 import laba5.server.logic.CommandManager;
 import laba5.server.storage.CommandsListStoragingManager;
 import laba5.server.storage.OnCrashStorageWriter;
 
 import java.io.*;
 import java.net.*;
-import java.nio.Buffer;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -26,6 +26,30 @@ import java.util.concurrent.TimeUnit;
  * @version 0.1
  */
 public class Client {
+    public class UserAuthorizer{
+        private final User user;
+        private final Request userRequest;
+
+        public UserAuthorizer(){
+            ioManager.printMessage("Введите свой логин: ", false);
+            String username = ioManager.getRawInput().split(" ")[0];
+            String password = ioManager.getPasswordHash();
+            this.user = new User(username, password);
+            userRequest = new Request(null, user,null, false, null);
+        }
+
+        public Response getUserResponse(){
+            try {
+                return communicateWithServer(userRequest);
+            } catch (IOException ignored){
+                return null;
+            }
+        }
+        public User getUser(){
+            return user;
+        }
+    }
+
     /**
      * Менеджер ввода вывода.
      * @see IIOManager
@@ -76,7 +100,7 @@ public class Client {
         this.commandManager = commandManager;
     }
 
-    private Object communicateWithServer(Request request) throws IOException {
+    private Response communicateWithServer(Request request) throws IOException {
         //InetAddress host = InetAddress.getLocalHost();
         InetAddress host = InetAddress.getByName("103.90.75.212");
         //InetAddress host = InetAddress.getByName("se.ifmo.ru");
@@ -150,6 +174,13 @@ public class Client {
                     ioManager.addCommandsToSimulator(lastSessionUserInput);
                 }
             }
+
+            var userauth = new UserAuthorizer();
+            Response userResp = userauth.getUserResponse();
+            if (!((userResp.statusCode() == -1) || (userResp.statusCode() == 404) || (userResp.statusCode() == 401))) {
+                userauth.getUser().id(userResp.statusCode());
+            }
+
             while (isClientAlive) {
                 try {
                     lastSessionUserInput = ioManager.getLastSessionUserInput();
@@ -176,8 +207,8 @@ public class Client {
                     }
                     else if (command instanceof IServerSideCommand) {
                         try {
-                            Object response = communicateWithServer(new Request((IServerSideCommand) command, args, haveAdditionalInf, addInf));
-                            ioManager.printMessage(((Response) response).responseClaster().message(), ((Response) response).responseClaster().willBeInQuiteMode());
+                            Response response = communicateWithServer(new Request((IServerSideCommand) command, userauth.getUser(), args, haveAdditionalInf, addInf));
+                            ioManager.printMessage(response.responseClaster().message(), response.responseClaster().willBeInQuiteMode());
                         } catch (IOException e) {
                             ioManager.printError("Ошибка при общении с сервером: " + e.fillInStackTrace() + "\n");
                         }

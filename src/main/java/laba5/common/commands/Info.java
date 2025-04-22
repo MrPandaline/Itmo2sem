@@ -2,6 +2,7 @@ package laba5.common.commands;
 
 import laba5.common.dataExchanging.Response;
 import laba5.common.dataExchanging.ResponseClaster;
+import laba5.common.model.User;
 import laba5.server.Server;
 import laba5.server.logic.CollectionManager;
 
@@ -20,8 +21,8 @@ public class Info implements IServerSideCommand{
     }
 
     @Override
-    public Response execute(Server server, String[] args) {
-        CollectionManager<?> collectionManager = server.getCollectionManager();
+    public Response execute(Server server, String[] args, User user) {
+        CollectionManager collectionManager = server.getCollectionManager();
         ZonedDateTime time = collectionManager.getCollectionInitializationTime();
         StringBuilder stringBuilder = new StringBuilder();
 
@@ -38,6 +39,6 @@ public class Info implements IServerSideCommand{
             stringBuilder.append("Класс, экземпляры которого содержатся в коллекции: ").append(collectionManager
                     .getCollection().iterator().next().getClass().getSimpleName()).append("\n");
         }
-        return new Response(new ResponseClaster(outInQuiteMode, stringBuilder.toString()));
+        return new Response(200, new ResponseClaster(outInQuiteMode, stringBuilder.toString()));
     }
 }

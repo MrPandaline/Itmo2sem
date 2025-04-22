@@ -3,6 +3,7 @@ package laba5.common.commands;
 import laba5.common.dataExchanging.Response;
 import laba5.common.dataExchanging.ResponseClaster;
 import laba5.common.model.Dragon;
+import laba5.common.model.User;
 import laba5.server.Server;
 import laba5.server.storage.IModelStorageManager;
 
@@ -20,10 +21,10 @@ public class Save implements IServerSideCommand{
     }
 
     @Override
-    public Response execute(Server server, String[] args) {
+    public Response execute(Server server, String[] args, User user) {
         LinkedList<Dragon> collection = server.getCollectionManager().getCollection();
         IModelStorageManager storageManager = server.getStorageManager();
         storageManager.writeToStorage(collection);
-        return new Response(new ResponseClaster(outInQuiteMode, "Коллекция сохранена в файл! \n"));
+        return new Response(200, new ResponseClaster(outInQuiteMode, "Коллекция сохранена в файл! \n"));
     }
 }

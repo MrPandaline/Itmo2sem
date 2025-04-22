@@ -2,6 +2,7 @@ package laba5.common.commands;
 
 import laba5.common.dataExchanging.Response;
 import laba5.common.dataExchanging.ResponseClaster;
+import laba5.common.model.User;
 import laba5.server.Server;
 
 import java.util.LinkedList;
@@ -18,8 +19,8 @@ public class Clear implements IServerSideCommand{
     }
 
     @Override
-    public Response execute(Server server, String[] args) {
-        server.getCollectionManager().setCollection(new LinkedList<>());
-        return new Response(new ResponseClaster(outInQuiteMode,"Коллекция очищена!"));
+    public Response execute(Server server, String[] args, User user) {
+        server.getCollectionManager().clear();
+        return new Response(200, new ResponseClaster(outInQuiteMode,"Коллекция очищена!"));
     }
 }

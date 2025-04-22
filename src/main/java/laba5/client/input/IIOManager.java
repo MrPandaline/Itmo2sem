@@ -73,5 +73,7 @@ public interface IIOManager {
      * Вывод ошибки.
      */
     void printError(String errorMessage);
+
+    String getPasswordHash();
 }
 

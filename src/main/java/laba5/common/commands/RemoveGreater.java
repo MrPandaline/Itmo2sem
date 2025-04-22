@@ -3,6 +3,7 @@ package laba5.common.commands;
 import laba5.client.input.IIOManager;
 import laba5.common.dataExchanging.Response;
 import laba5.common.dataExchanging.ResponseClaster;
+import laba5.common.model.User;
 import laba5.server.Server;
 import laba5.common.ModelBuilder;
 import laba5.common.model.Dragon;
@@ -25,12 +26,12 @@ public class RemoveGreater implements IServerSideCommand, IMultiLineCommand{
     }
 
     @Override
-    public Response execute(Server server, String[] args) {
-        LinkedList<Dragon> linkedList = server.getCollectionManager().getCollection();
+    public Response execute(Server server, String[] args, User user) {
         //TODO: вот тут надо дополнительный ввод пользователя получить и вписать вот этот интерфейс
 
-        linkedList.removeIf(dragon -> ((Dragon) additionalUserInput.remove()).compareTo(dragon) < 0);
-        return new Response(new ResponseClaster( outInQuiteMode,"Элементы большие, чем введённый, удалены."));
+
+        server.getCollectionManager().remove(dragon -> ((Dragon) additionalUserInput.remove()).compareTo(dragon) < 0, user);
+        return new Response(200, new ResponseClaster( outInQuiteMode,"Элементы большие, чем введённый, удалены."));
     }
 
     @Override

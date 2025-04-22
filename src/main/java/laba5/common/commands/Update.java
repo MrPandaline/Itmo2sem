@@ -25,27 +25,29 @@ public class Update implements IServerSideCommand, IMultiLineCommand{
     @Override
     public Response execute(Server server, String[] args) {
         StringBuilder sb = new StringBuilder();
-        LinkedList<Dragon> linkedList = server.getCollectionManager().getCollection();
+
+        int status;
+
         if (args.length == 0) {
             sb.append("Вы не ввели id элемента коллекции!");
+            status = 401;
         }
         else{
             int id = Integer.parseInt(args[0]);
-            boolean flag = false;
-            for(Dragon dragon : linkedList){
-                if (dragon.id() == id){
-                    flag = true;
-                    linkedList.set(linkedList.indexOf(dragon), (Dragon) additionalUserInput.remove());
-                }
-                //TODO: добавить вывод сообщения что элемент обновлён
-            }
+            boolean flag = server.getCollectionManager().update(id, (Dragon) additionalUserInput.remove());
             if (!flag){
                 sb.append("Элемент коллекции с таким id не найден! \n")
                         .append("Введите show, чтобы вывести список доступных элементов.\n");
+                status = 404;
+            }
+            else {
+                sb.append("Элемент коллекции обновлён!\n");
+                status = 200;
             }
 
+
         }
-        return new Response(new ResponseClaster(outInQuiteMode, sb.toString()));
+        return new Response(status, new ResponseClaster(outInQuiteMode, sb.toString()));
     }
 
     @Override

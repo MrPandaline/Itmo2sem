@@ -3,6 +3,7 @@ package laba5.common.commands;
 import laba5.common.dataExchanging.Response;
 import laba5.common.dataExchanging.ResponseClaster;
 import laba5.common.model.Dragon;
+import laba5.common.model.User;
 import laba5.server.Server;
 
 import java.util.*;
@@ -22,7 +23,7 @@ public class GroupCountingByName implements IServerSideCommand{
     }
 
     @Override
-    public Response execute(Server server, String[] args) {
+    public Response execute(Server server, String[] args, User user) {
         LinkedList<Dragon> linkedList = server.getCollectionManager().getCollection();
         linkedList.sort(Comparator.comparing(Dragon::name));
 
@@ -32,6 +33,6 @@ public class GroupCountingByName implements IServerSideCommand{
             .map(entry -> "Элементов коллекции с именем " + entry.getKey() + ": " + entry.getValue())
             .collect(Collectors.joining("\n"));
 
-        return new Response(new ResponseClaster(outInQuiteMode, result));
+        return new Response(200, new ResponseClaster(outInQuiteMode, result));
     }
 }

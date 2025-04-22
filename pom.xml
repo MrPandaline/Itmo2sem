@@ -9,11 +9,6 @@
     <version>1.1</version>
 	<dependencies>
 		<dependency>
-			<groupId>com.github.kwhat</groupId>
-			<artifactId>jnativehook</artifactId>
-			<version>2.2.2</version>
-		</dependency>
-		<dependency>
 			<groupId>org.jline</groupId>
 			<artifactId>jline</artifactId>
 			<version>3.25.1</version>
@@ -37,7 +32,7 @@
 							</descriptorRefs>
 							<archive>
 								<manifest>
-									<mainClass>laba5.server.Main</mainClass>
+									<mainClass>laba5.client.Main</mainClass>
 								</manifest>
 							</archive>
 						</configuration>
@@ -51,14 +46,14 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>laba5.server.Main</mainClass>
+							<mainClass>laba5.client.Main</mainClass>
 						</manifest>
 						<manifestEntries>
-							<Built-By>${user.name}</Built-By> <!-- Имя пользователя, собравшего проект -->
-							<Build-Jdk>${java.version}</Build-Jdk> <!-- Версия JDK, используемая для сборки -->
-							<Created-By>Maven</Created-By> <!-- Информация о сборщике -->
-							<Implementation-Version>${project.version}</Implementation-Version> <!-- Версия проекта -->
-							<Specification-Version>1.0</Specification-Version> <!-- Версия спецификации -->
+							<Built-By>${user.name}</Built-By>
+							<Build-Jdk>${java.version}</Build-Jdk>
+							<Created-By>Maven</Created-By>
+							<Implementation-Version>${project.version}</Implementation-Version>
+							<Specification-Version>1.0</Specification-Version>
 						</manifestEntries>
 					</archive>
 				</configuration>

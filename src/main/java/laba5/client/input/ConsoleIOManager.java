@@ -1,5 +1,6 @@
 package laba5.client.input;
 
+import laba5.client.utils.HashPassword;
 import laba5.common.exceptions.UnplannedAppTermination;
 import laba5.server.storage.CommandsListStoragingManager;
 import org.jline.reader.*;
@@ -82,6 +83,12 @@ public class ConsoleIOManager implements IIOManager {
 
         assert input != null;
         return input.isEmpty() ? null : input;
+    }
+
+    @Override
+    public String getPasswordHash(){
+        char mask = '*';
+        return HashPassword.hashPassword(lineReader.readLine("Введите пароль: ", mask));
     }
 
     @Override

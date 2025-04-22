@@ -6,6 +6,7 @@ import laba5.common.model.Dragon;
 import laba5.server.Server;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
 
 /**
@@ -24,14 +25,18 @@ public class Show implements IServerSideCommand{
         LinkedList<Dragon> collection = server.getCollectionManager().getCollection();
         StringBuilder sb = new StringBuilder();
         Collections.sort(collection);
+        int status;
+
         if (!collection.isEmpty()) {
+            status = 200;
             for (Object object : collection) {
                 sb.append(object.toString()).append('\n').append('\n');
             }
         }
         else {
             sb.append("Коллекция пуста! Введите add для добавления нового элемента.");
+            status = 404;
         }
-        return new Response(new ResponseClaster(outInQuiteMode, sb.toString()));
+        return new Response(status, new ResponseClaster(outInQuiteMode, sb.toString()));
     }
 }

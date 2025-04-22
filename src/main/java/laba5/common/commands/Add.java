@@ -3,6 +3,7 @@ package laba5.common.commands;
 import laba5.client.input.IIOManager;
 import laba5.common.dataExchanging.Response;
 import laba5.common.dataExchanging.ResponseClaster;
+import laba5.common.model.User;
 import laba5.server.Server;
 import laba5.common.ModelBuilder;
 import laba5.common.model.Dragon;
@@ -24,9 +25,13 @@ public class Add implements IServerSideCommand, IMultiLineCommand {
     }
 
     @Override
-    public Response execute(Server server, String[] args) {
-        server.getCollectionManager().getCollection().add((Dragon) additionalUserInput.remove());
-        return new Response(new ResponseClaster(outInQuiteMode, "Элемент добавлен в коллекцию!"));
+    public Response execute(Server server, String[] args, User user) {
+        Dragon drag = (Dragon) additionalUserInput.remove();
+        System.out.println(drag.id());
+        drag.resetID();
+        System.out.println(drag.id());
+        server.getCollectionManager().add(drag);
+        return new Response(200, new ResponseClaster(outInQuiteMode, "Элемент добавлен в коллекцию!"));
     }
 
     @Override
