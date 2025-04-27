@@ -6,6 +6,7 @@ import laba5.common.model.Dragon;
 import laba5.common.model.User;
 import laba5.common.model.modelEnums.DragonType;
 import laba5.server.Server;
+import laba5.server.logic.CollectionManager;
 
 import java.util.ArrayDeque;
 import java.util.Collections;
@@ -26,9 +27,9 @@ public class FilterGreaterThanType implements IServerSideCommand{
     }
 
     @Override
-    public Response execute(Server server, String[] args, User user) {
+    public Response execute(String[] args, User user) {
 
-        LinkedList<Dragon> linkedList = server.getCollectionManager().getCollection();
+        LinkedList<Dragon> linkedList = CollectionManager.getInstance().getCollection();
         Response response;
         int responseCode = 200;
         if (args.length == 0) {

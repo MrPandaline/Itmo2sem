@@ -1,14 +1,12 @@
 package laba5.server.logic;
 
+import laba5.common.Configuration;
 import laba5.common.model.Dragon;
 import laba5.common.model.User;
 
 import java.sql.SQLException;
 import java.time.ZonedDateTime;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.function.Predicate;
 
 /**
@@ -32,13 +30,25 @@ public class CollectionManager {
 
     private HashMap<Dragon, User> dragonUserMap = new HashMap<>();
 
+    private static CollectionManager instance;
+
     /**
      * Конструктор класса менеджера коллекции.
      * */
-    public CollectionManager( DBManager dbManager)
+    private CollectionManager()
     {
         this.collection = new LinkedList<Dragon>();
-        this.dbManager = dbManager;
+        this.dbManager = DBManager.getInstance();
+        load();
+        Collections.sort(collection);
+        instance = this;
+    }
+
+    public static CollectionManager getInstance(){
+        if (instance == null) {
+            instance = new CollectionManager();
+        }
+        return instance;
     }
 
     /** Метод получения используемой коллекции. */
@@ -61,22 +71,26 @@ public class CollectionManager {
         return collection.getClass();
     }
 
-    // TODO: Надо добавить user'а сюда, проверку на юзера
+
     public boolean add(Dragon element){
         boolean flag = dbManager.insertDragon(element, element.creatorId());
         if (flag) {
+            long id = dbManager.selectDragon().stream().filter(dragon -> dragon.name().equals(element.name()) &&
+                    dragon.killer().equals(element.killer())).findFirst().get().id();
+            element.id(id);
             collection.add(element);
         }
         return flag;
     }
 
-    // TODO: Надо добавить user'а сюда, проверку на юзера
     public boolean remove(Predicate<Dragon> predicate, User user){
         LinkedList<Dragon> removed = new LinkedList<>();
         boolean flag = true;
         for (Dragon dragon : collection){
-            if (predicate.test(dragon) && flag){
-                flag = dbManager.removeDragon(dragon.id());
+            if (flag && predicate.test(dragon)){
+                if (user.id() == dragon.creatorId()) {
+                    flag = dbManager.removeDragon(dragon.id());
+                }
                 if (flag){
                     removed.add(dragon);
                 }
@@ -92,21 +106,24 @@ public class CollectionManager {
         return flag;
     }
 
-    public Dragon poll(){
+    public Dragon poll(User user){
         Dragon dragon = collection.poll();
-        boolean flag =  dbManager.removeDragon(dragon.id());
-        if (!flag){
-            collection.add(dragon);
-            dragon = null;
+        if (dragon != null && user.id() == dragon.creatorId()) {
+            boolean flag = dbManager.removeDragon(dragon.id());
+            if (!flag) {
+                collection.add(dragon);
+                dragon = null;
+            }
         }
+        else{ dragon = null;}
         return dragon;
     }
 
-    public boolean clear(){
+    public boolean clear(User user){
         boolean flag = true;
         LinkedList<Dragon> removed = new LinkedList<>();
         for (Dragon dragon : collection){
-            if (flag) {
+            if (flag && user.id() == dragon.creatorId()) {
                 flag = dbManager.removeDragon(dragon.id());
                 removed.add(dragon);
             }
@@ -116,7 +133,7 @@ public class CollectionManager {
                 dbManager.insertDragon(dragon, dragon.creatorId());
             }
         }
-        else { collection.clear();}
+        else { collection.removeIf(dragon -> user.id() == dragon.creatorId()); ;}
         return flag;
     }
 
@@ -133,13 +150,16 @@ public class CollectionManager {
 
     }
 
-    // TODO: Надо добавить user'а сюда, проверку на юзера
-    public boolean update(int id, Dragon element){
-        boolean flag = dbManager.updateDragon(element);
-        if(flag) {
-            for (Dragon dragon : collection) {
-                if (dragon.id() == id) {
-                    collection.set(collection.indexOf(dragon), element);
+    public boolean update(int id, Dragon element, User user){
+        boolean flag = false;
+        element.id(id);
+        if (user.id() == element.creatorId()) {
+            flag = dbManager.updateDragon(element);
+            if (flag) {
+                for (Dragon dragon : collection) {
+                    if (dragon.id() == id) {
+                        collection.set(collection.indexOf(dragon), element);
+                    }
                 }
             }
         }

@@ -3,7 +3,9 @@ package laba5.common.commands;
 import laba5.common.dataExchanging.Response;
 import laba5.common.dataExchanging.ResponseClaster;
 import laba5.common.model.Dragon;
+import laba5.common.model.User;
 import laba5.server.Server;
+import laba5.server.logic.CollectionManager;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -21,8 +23,8 @@ public class Show implements IServerSideCommand{
     }
 
     @Override
-    public Response execute(Server server, String[] args) {
-        LinkedList<Dragon> collection = server.getCollectionManager().getCollection();
+    public Response execute(String[] args, User user) {
+        LinkedList<Dragon> collection = CollectionManager.getInstance().getCollection();
         StringBuilder sb = new StringBuilder();
         Collections.sort(collection);
         int status;

@@ -5,6 +5,7 @@ import laba5.common.dataExchanging.ResponseClaster;
 import laba5.common.model.Dragon;
 import laba5.common.model.User;
 import laba5.server.Server;
+import laba5.server.logic.CollectionManager;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -23,8 +24,8 @@ public class GroupCountingByName implements IServerSideCommand{
     }
 
     @Override
-    public Response execute(Server server, String[] args, User user) {
-        LinkedList<Dragon> linkedList = server.getCollectionManager().getCollection();
+    public Response execute(String[] args, User user) {
+        LinkedList<Dragon> linkedList = CollectionManager.getInstance().getCollection();
         linkedList.sort(Comparator.comparing(Dragon::name));
 
     String result = linkedList.stream()

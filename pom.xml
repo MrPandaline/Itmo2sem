@@ -63,7 +63,7 @@
 				<artifactId>exec-maven-plugin</artifactId>
 				<version>3.5.0</version>
 				<configuration>
-					<mainClass>laba5.Main</mainClass>
+					<mainClass>laba5.client.Main</mainClass>
 				</configuration>
 			</plugin>
 

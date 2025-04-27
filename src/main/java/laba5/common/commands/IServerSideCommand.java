@@ -10,5 +10,5 @@ public interface IServerSideCommand extends ICommand {
      * @see Server
      * @param args дополнительные аргументы, введённые пользователем
      */
-    Response execute(Server server, String[] args, User user);
+    Response execute( String[] args, User user);
 }

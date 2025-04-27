@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Класс, объединяющий все клиентские модули.
  * @author Homoursus
- * @version 0.1
+ * @version 1.1
  */
 public class Client {
     public class UserAuthorizer{
@@ -41,7 +41,8 @@ public class Client {
         public Response getUserResponse(){
             try {
                 return communicateWithServer(userRequest);
-            } catch (IOException ignored){
+            } catch (IOException e){
+                e.printStackTrace();
                 return null;
             }
         }
@@ -101,8 +102,8 @@ public class Client {
     }
 
     private Response communicateWithServer(Request request) throws IOException {
-        //InetAddress host = InetAddress.getLocalHost();
-        InetAddress host = InetAddress.getByName("103.90.75.212");
+        InetAddress host = InetAddress.getLocalHost();
+        //InetAddress host = InetAddress.getByName("103.90.75.212");
         //InetAddress host = InetAddress.getByName("se.ifmo.ru");
         int port = Configuration.SERVER_PORT;
         int attempts = 0;
@@ -174,11 +175,20 @@ public class Client {
                     ioManager.addCommandsToSimulator(lastSessionUserInput);
                 }
             }
+            boolean isAutharized = false;
+            UserAuthorizer userauth = new UserAuthorizer();
+            while (!isAutharized) {
+                Response userResp = userauth.getUserResponse();
+                ioManager.printMessage(userResp.responseClaster().message(), false);
 
-            var userauth = new UserAuthorizer();
-            Response userResp = userauth.getUserResponse();
-            if (!((userResp.statusCode() == -1) || (userResp.statusCode() == 404) || (userResp.statusCode() == 401))) {
-                userauth.getUser().id(userResp.statusCode());
+                if (!((userResp.statusCode() == -1) || (userResp.statusCode() == 404) || (userResp.statusCode() == 401))) {
+                    System.out.println(userResp.statusCode());
+                    userauth.getUser().id(userResp.statusCode());
+                    isAutharized = true;
+                }
+                else{
+                    userauth = new UserAuthorizer();
+                }
             }
 
             while (isClientAlive) {

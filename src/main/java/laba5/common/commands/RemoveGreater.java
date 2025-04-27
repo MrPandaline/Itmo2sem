@@ -3,10 +3,12 @@ package laba5.common.commands;
 import laba5.client.input.IIOManager;
 import laba5.common.dataExchanging.Response;
 import laba5.common.dataExchanging.ResponseClaster;
+import laba5.common.dataExchanging.UnfinishedDragon;
 import laba5.common.model.User;
 import laba5.server.Server;
 import laba5.common.ModelBuilder;
 import laba5.common.model.Dragon;
+import laba5.server.logic.CollectionManager;
 
 import java.util.ArrayDeque;
 import java.util.LinkedList;
@@ -26,17 +28,21 @@ public class RemoveGreater implements IServerSideCommand, IMultiLineCommand{
     }
 
     @Override
-    public Response execute(Server server, String[] args, User user) {
-        //TODO: вот тут надо дополнительный ввод пользователя получить и вписать вот этот интерфейс
-
-
-        server.getCollectionManager().remove(dragon -> ((Dragon) additionalUserInput.remove()).compareTo(dragon) < 0, user);
-        return new Response(200, new ResponseClaster( outInQuiteMode,"Элементы большие, чем введённый, удалены."));
+    public Response execute(String[] args, User user) {
+        boolean flag = CollectionManager.getInstance().remove(dragon ->
+                (((UnfinishedDragon) additionalUserInput.remove())).buildDragon(user.id()).compareTo(dragon) < 0, user);
+        String message;
+        if (flag) {
+            message = "Элементы коллекции, созданные вами и большие, чем введённый, удалены.\n";
+        } else {
+            message = "Какой-то из элементов удалить не удалось! Все изменения отменены";
+        }
+        return new Response(200, new ResponseClaster( outInQuiteMode, message));
     }
 
     @Override
     public void getAdditionalUserInput(IIOManager ioManager) {
-        Dragon curDragon = new ModelBuilder(ioManager).buildDragon();
+        UnfinishedDragon curDragon = new ModelBuilder(ioManager).buildDragon();
         additionalUserInput.push(curDragon);
     }
 }

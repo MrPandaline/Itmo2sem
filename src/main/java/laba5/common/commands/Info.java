@@ -21,8 +21,8 @@ public class Info implements IServerSideCommand{
     }
 
     @Override
-    public Response execute(Server server, String[] args, User user) {
-        CollectionManager collectionManager = server.getCollectionManager();
+    public Response execute(String[] args, User user) {
+        CollectionManager collectionManager = CollectionManager.getInstance();
         ZonedDateTime time = collectionManager.getCollectionInitializationTime();
         StringBuilder stringBuilder = new StringBuilder();
 

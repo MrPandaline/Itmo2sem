@@ -145,6 +145,7 @@ public class Dragon extends AbstractModel implements Comparable<Dragon>, Seriali
     public java.time.ZonedDateTime creationDate() { return creationDate; }
 
     public long creatorId() { return creatorId;}
+    public void creatorId(long creatorId) { this.creatorId = creatorId;}
 
     public void resetID() { id = idGenerator++; }
 

@@ -5,6 +5,7 @@ import laba5.common.dataExchanging.ResponseClaster;
 import laba5.common.model.Dragon;
 import laba5.common.model.User;
 import laba5.server.Server;
+import laba5.server.logic.CollectionManager;
 
 import java.util.LinkedList;
 
@@ -20,16 +21,16 @@ public class RemoveHead implements IServerSideCommand{
     }
 
     @Override
-    public Response execute(Server server, String[] args, User user) {
+    public Response execute(String[] args, User user) {
         StringBuilder sb = new StringBuilder();
-        Dragon dragon = server.getCollectionManager().poll();
+        Dragon dragon = CollectionManager.getInstance().poll(user);
         int status;
         if (dragon != null) {
             sb.append("Первый элемент коллекции: \n").append(dragon).append("\n");
             status = 200;
         }
         else{
-            sb.append("Коллекция пуста! Введите add для добавления нового элемента.");
+            sb.append("Коллекция пуста либо её первый элемент вам не принадлежит! Введите show для просмотра элементов коллекции");
             status = 404;
         }
         return new Response(status, new ResponseClaster(outInQuiteMode, sb.toString()));

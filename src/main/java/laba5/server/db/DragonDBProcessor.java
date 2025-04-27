@@ -27,21 +27,23 @@ public class DragonDBProcessor {
     public LinkedList<Dragon> select() {
         LinkedList<Dragon> dragons = new LinkedList<>();
         try {
-            ResultSet rs = dbManager.getStatement().executeQuery("SELECT Dragon.id AS id, Dragon.name AS name, "
-                    + "Coordinates.x AS c_x, Coordinates.y AS c_y, Dragon.creationDate AS creationDate, "
-                    + "Dragon.age AS age, Dragon.description AS description, dragonType.name AS d_type, "
-                    + "dragonCharacter.name AS d_character, Person.name AS p_name, Person.height AS p_height, "
-                    + "Color.name AS p_eyeColor, Color.name AS p_hairColor, Country.name AS p_nationality, "
-                    + "Location.x AS l_x, Location.y AS l_y, Location.z AS l_z , "
-                    + "Dragon.personId AS p_id, Dragon.creatorId AS creator_id FROM Dragon "
-                    + "JOIN Coordinates ON Coordinates.id = Dragon.id_coordinates "
-                    + "LEFT JOIN DragonType ON Dragon.id_dragonType = DraonType.id "
-                    + "LEFT JOIN DragonCharacter ON Dragon.id_dragonCharacter = DragonCharacter.id "
-                    + "LEFT JOIN Person ON Dragon.id_person = Person.id "
-                    + "LEFT JOIN Location ON Person.id_location = Location.id "
-                    + "LEFT JOIN Color ON Person.id_eyeColor = Color.id "
-                    + "LEFT JOIN Country ON Person.id_country = Country.id "
-                    + "LEFT JOIN Color ON Person.id_hairColor = Color.id;");
+            ResultSet rs = dbManager.getStatement().executeQuery(
+                    "SELECT Dragon.id AS id, Dragon.name AS name, "
+                            + "Coordinates.x AS c_x, Coordinates.y AS c_y, Dragon.creationDate AS creationDate, "
+                            + "Dragon.age AS age, Dragon.description AS description, dragonType.name AS d_type, "
+                            + "dragonCharacter.name AS d_character, Person.name AS p_name, Person.height AS p_height, "
+                            + "eyeColor.name AS p_eyeColor, hairColor.name AS p_hairColor, Country.name AS p_nationality, "
+                            + "Location.x AS l_x, Location.y AS l_y, Location.z AS l_z , "
+                            + "Dragon.id_killer AS p_id, Dragon.id_user AS creator_id FROM Dragon "
+                            + "JOIN Coordinates ON Coordinates.id = Dragon.id_coordinates "
+                            + "LEFT JOIN DragonType ON Dragon.id_dragonType = DragonType.id "
+                            + "LEFT JOIN DragonCharacter ON Dragon.id_dragonCharacter = DragonCharacter.id "
+                            + "LEFT JOIN Person ON Dragon.id_killer = Person.id "
+                            + "LEFT JOIN Location ON Person.id_location = Location.id "
+                            + "LEFT JOIN Color AS eyeColor ON Person.id_eyeColor = eyeColor.id "
+                            + "LEFT JOIN Color AS hairColor ON Person.id_hairColor = hairColor.id "
+                            + "LEFT JOIN Country ON Person.id_country = Country.id;"
+            );
 
             while (rs.next()) {
                 String description = null;
@@ -95,7 +97,7 @@ public class DragonDBProcessor {
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)") ) {
             stmt.setString(1, dragon.name());
             stmt.setLong(2, insert(dragon.coordinates()));
-            stmt.setObject(3, dragon.creationDate());
+            stmt.setObject(3, dragon.creationDate().toOffsetDateTime(), Types.TIMESTAMP_WITH_TIMEZONE);
             stmt.setLong(4, dragon.age());
             if (dragon.description() == null) {
                 stmt.setNull(5, Types.VARCHAR);

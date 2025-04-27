@@ -1,6 +1,6 @@
 package laba5.server.logic;
 
-import laba5.client.input.IIOManager;
+import laba5.common.Configuration;
 import laba5.common.model.Dragon;
 import laba5.common.model.User;
 import laba5.common.model.modelEnums.Color;
@@ -20,15 +20,28 @@ public class DBManager {
     private Connection connection = null;
     private final UserDBProcessor dbUserProcessor;
     private final DragonDBProcessor dbDragonProcessor;
+    private static DBManager instance;
 
 
-    public DBManager(String url, String user, String pass) {
-        this.DB_URL = url;
-        this.USER = user;
-        this.PASS = pass;
+    private DBManager() {
+        this.DB_URL = Configuration.DB_URL;
+        this.USER = Configuration.DB_USER;
+        this.PASS = Configuration.DB_PASS;
 
         this.dbUserProcessor = new UserDBProcessor(this);
         this.dbDragonProcessor = new DragonDBProcessor(this);
+
+        connect();
+        initializeTables();
+
+        instance = this;
+    }
+
+    public static DBManager getInstance() {
+        if (instance == null) {
+            instance = new DBManager();
+        }
+        return instance;
     }
 
     public boolean connect() {
@@ -38,11 +51,13 @@ public class DBManager {
             System.err.println(" Драйвер JDBC PostgreSQL не найден. Добавьте его в путь библиотеки.");
             return false;
         }
+
         try {
             connection = DriverManager.getConnection(DB_URL, USER, PASS);
              }
         catch (SQLException e) {
             System.err.println("Ошибка при соединении с базой данных!");
+            e.printStackTrace();
             return false;
         }
 
@@ -67,10 +82,10 @@ public class DBManager {
                 stmt.executeUpdate("CREATE TABLE IF NOT EXISTS Country(id serial PRIMARY KEY, name varchar(40) NOT NULL);");
                 stmt.executeUpdate("CREATE TABLE IF NOT EXISTS DragonCharacter(id serial PRIMARY KEY, name varchar(40) NOT NULL);");
                 stmt.executeUpdate("CREATE TABLE IF NOT EXISTS DragonType(id serial PRIMARY KEY, name varchar(40) NOT NULL);");
-                stmt.executeUpdate("CREATE TABLE IF NOT EXISTS Location(id serial PRIMARY KEY, x FLOAT NOT NULL, y DOUBLE NOT NULL, z INTEGER NOT NULL, name varchar(40));");
+                stmt.executeUpdate("CREATE TABLE IF NOT EXISTS Location(id serial PRIMARY KEY, x FLOAT NOT NULL, y DOUBLE PRECISION NOT NULL, z INTEGER NOT NULL, name varchar(40));");
                 stmt.executeUpdate("CREATE TABLE IF NOT EXISTS Coordinates(id serial PRIMARY KEY, x FLOAT NOT NULL, y INTEGER NOT NULL);");
                 stmt.executeUpdate("CREATE TABLE IF NOT EXISTS Person(id serial PRIMARY KEY, name text NOT NULL, height INTEGER NOT NULL, id_eyeColor INTEGER REFERENCES Color, id_hairColor INTEGER REFERENCES Color, id_country INTEGER REFERENCES Country, id_location INTEGER REFERENCES Location);");
-                stmt.executeUpdate("CREATE TABLE IF NOT EXISTS Dragon(id SERIAL PRIMARY KEY, name text NOT NULL, id_coordinates INTEGER REFERENCES Coordinates NOT NULL, creationDate timestamp NOT NULL, age BIGINT NOT NULL, description text, id_dragonType INTEGER REFERENCES DragonType, id_dragonCharacter INTEGER REFERENCES DragonCharacter, id_killer INTEGER REFERENCES killer, id_user INTEGER REFERENCES DragonUser);");
+                stmt.executeUpdate("CREATE TABLE IF NOT EXISTS Dragon(id SERIAL PRIMARY KEY, name text NOT NULL, id_coordinates INTEGER REFERENCES Coordinates NOT NULL, creationDate timestamp NOT NULL, age BIGINT NOT NULL, description text, id_dragonType INTEGER REFERENCES DragonType, id_dragonCharacter INTEGER REFERENCES DragonCharacter, id_killer INTEGER REFERENCES Person, id_user INTEGER REFERENCES DragonUser);");
                 stmt.close();
 
 

@@ -3,10 +3,14 @@ package laba5.common.commands;
 import laba5.client.input.IIOManager;
 import laba5.common.dataExchanging.Response;
 import laba5.common.dataExchanging.ResponseClaster;
+import laba5.common.dataExchanging.UnfinishedDragon;
+import laba5.common.model.User;
 import laba5.server.Server;
 import laba5.common.ModelBuilder;
 import laba5.common.model.Dragon;
+import laba5.server.logic.CollectionManager;
 
+import java.time.ZonedDateTime;
 import java.util.ArrayDeque;
 import java.util.LinkedList;
 
@@ -23,7 +27,7 @@ public class Update implements IServerSideCommand, IMultiLineCommand{
     }
 
     @Override
-    public Response execute(Server server, String[] args) {
+    public Response execute(String[] args, User user) {
         StringBuilder sb = new StringBuilder();
 
         int status;
@@ -34,9 +38,12 @@ public class Update implements IServerSideCommand, IMultiLineCommand{
         }
         else{
             int id = Integer.parseInt(args[0]);
-            boolean flag = server.getCollectionManager().update(id, (Dragon) additionalUserInput.remove());
+            ZonedDateTime time = ZonedDateTime.now();
+
+            Dragon drag = ((UnfinishedDragon) additionalUserInput.remove()).buildDragon(time, user.id());
+            boolean flag = CollectionManager.getInstance().update(id, drag, user);
             if (!flag){
-                sb.append("Элемент коллекции с таким id не найден! \n")
+                sb.append("Элемент коллекции с таким id не найден либо вам не принадлежит! \n")
                         .append("Введите show, чтобы вывести список доступных элементов.\n");
                 status = 404;
             }
@@ -52,7 +59,7 @@ public class Update implements IServerSideCommand, IMultiLineCommand{
 
     @Override
     public void getAdditionalUserInput(IIOManager ioManager) {
-        Dragon newDragon = new ModelBuilder(ioManager).buildDragon();
+        UnfinishedDragon newDragon = new ModelBuilder(ioManager).buildDragon();
         additionalUserInput.push(newDragon);
     }
 }

@@ -1,6 +1,7 @@
 package laba5.common;
 
 import laba5.client.input.IIOManager;
+import laba5.common.dataExchanging.UnfinishedDragon;
 import laba5.common.model.Coordinates;
 import laba5.common.model.Dragon;
 import laba5.common.model.Location;
@@ -35,7 +36,7 @@ public class ModelBuilder {
     boolean inQuiteMode = false;
 
     /** Метод, создающий объект класса Dragon по вводу пользователя.*/
-    public Dragon buildDragon() {
+    public UnfinishedDragon buildDragon() {
 
         ioManager.printMessage("Введите имя дракона: ", inQuiteMode);
         String name = ioManager.getValidRawInput(Objects::nonNull);
@@ -63,7 +64,7 @@ public class ModelBuilder {
             killer = null;
         }
         ioManager.printMessage("Дракон успешно добавлен в коллекцию!\n", true);
-        return new Dragon(name, coordinates, age, description, dragonType, dragonCharacter, killer);
+        return new UnfinishedDragon(name, coordinates, age, description, dragonType, dragonCharacter, killer);
     }
 
     /** Метод, создающий объект класса Location по вводу пользователя.*/

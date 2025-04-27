@@ -1,19 +1,14 @@
 package laba5.server;
 
-import jdk.jshell.Snippet;
 import laba5.common.Configuration;
-import laba5.common.commands.IClientSideCommand;
 import laba5.common.commands.IServerSideCommand;
 import laba5.common.commands.Save;
 import laba5.common.dataExchanging.Request;
 import laba5.common.dataExchanging.Response;
 import laba5.common.dataExchanging.ResponseClaster;
 import laba5.common.model.User;
-import laba5.server.logging.IServerLogger;
 import laba5.server.logic.CollectionManager;
-import laba5.common.model.Dragon;
 import laba5.server.logic.DBManager;
-import laba5.server.storage.IModelStorageManager;
 
 import java.io.*;
 import java.net.InetSocketAddress;
@@ -30,22 +25,11 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class Server {
 
-    private static final Map<SocketChannel, Queue<Object>> clientResponseQueues = new ConcurrentHashMap<>();
-    private static final Map<SocketChannel, ByteBuffer> clientRequestBuffers = new ConcurrentHashMap<>();
-    private static final Map<SocketChannel, Integer> expectedSizes = new ConcurrentHashMap<>();
-    /**
-     * Менеджер управления коллекцией.
-     * @see CollectionManager
-     * */
-    private final CollectionManager collectionManager;
-
-    /**
-     * Менеджер работы с записью коллекции в хранилище.
-     * @see IModelStorageManager
-     * */
-    private final IModelStorageManager storageManager;
-
+    private final Map<SocketChannel, Queue<Object>> clientResponseQueues = new ConcurrentHashMap<>();
+    private final Map<SocketChannel, ByteBuffer> clientRequestBuffers = new ConcurrentHashMap<>();
+    private final Map<SocketChannel, Integer> expectedSizes = new ConcurrentHashMap<>();
     private final DBManager dbManager;
+
 
     /**
      * Флаг состояния, показывающий, включен ли сервер.
@@ -56,16 +40,9 @@ public class Server {
 
     /**
      * Конструктор сервера. Инициализирует всех серверных менеджеров.
-     * @param storageManager класс-реализация менеджера управления хранением коллекции.
      * */
-    public Server(IModelStorageManager storageManager, IServerLogger logger, DBManager dbManager) {
-        this.storageManager = storageManager;
-        this.dbManager = dbManager;
-        this.collectionManager = new CollectionManager(dbManager);
-        Dragon.setIdGenerator(storageManager.getNextID());
-        //TODO: Вот это надо убрать и вообще storageManager выпилить целиком.
-        collectionManager.setCollection(storageManager.readFromStorage(logger));
-        Collections.sort(collectionManager.getCollection());
+    public Server() {
+        dbManager = DBManager.getInstance();
     }
 
     /**
@@ -175,7 +152,7 @@ public class Server {
 
             Response response;
             if (request.command() != null) {
-                response = request.command().execute(this, request.args(), request.user());
+                response = request.command().execute(request.args(), request.user());
             }
             //TODO: Заставить правильно работать код с юзером.
             else {
@@ -213,7 +190,7 @@ public class Server {
                 response = new Response(status, new ResponseClaster(false, responseMessage));
             }
             IServerSideCommand save = new Save();
-            save.execute(this, request.args(), new User("",""));
+            save.execute(request.args(), new User("",""));
             System.out.println(response);
 
             clientResponseQueues.get(clientChannel).add(response);
@@ -267,20 +244,6 @@ public class Server {
         clientChannel.close();
         key.cancel();
 
-    }
-
-    /**
-     * Метод, возвращающий используемый менеджер управления коллекцией.
-     * */
-    public CollectionManager getCollectionManager() {
-        return collectionManager;
-    }
-
-    /**
-     * Метод, возвращающий используемый менеджер управления командами.
-     * */
-    public IModelStorageManager getStorageManager() {
-        return storageManager;
     }
 
     /**

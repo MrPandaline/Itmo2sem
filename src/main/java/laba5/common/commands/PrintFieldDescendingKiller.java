@@ -3,7 +3,9 @@ package laba5.common.commands;
 import laba5.common.dataExchanging.Response;
 import laba5.common.dataExchanging.ResponseClaster;
 import laba5.common.model.Dragon;
+import laba5.common.model.User;
 import laba5.server.Server;
+import laba5.server.logic.CollectionManager;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -24,8 +26,8 @@ public class PrintFieldDescendingKiller implements IServerSideCommand {
 
 
     @Override
-    public Response execute(Server server, String[] args) {
-        LinkedList<Dragon> linkedList = server.getCollectionManager().getCollection();
+    public Response execute(String[] args, User user) {
+        LinkedList<Dragon> linkedList = CollectionManager.getInstance().getCollection();
         linkedList.sort((a, b) -> {
             if (b.killer() != null && a.killer() != null) {
                 return b.killer().compareTo(a.killer());
@@ -48,6 +50,6 @@ public class PrintFieldDescendingKiller implements IServerSideCommand {
 
         Collections.sort(linkedList);
 
-        return new Response( new ResponseClaster(outInQuiteMode, sb.toString()));
+        return new Response(200, new ResponseClaster(outInQuiteMode, sb.toString()));
     }
 }
