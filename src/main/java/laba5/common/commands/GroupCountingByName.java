@@ -25,14 +25,17 @@ public class GroupCountingByName implements IServerSideCommand{
 
     @Override
     public Response execute(String[] args, User user) {
-        LinkedList<Dragon> linkedList = CollectionManager.getInstance().getCollection();
+        List<Dragon> linkedList = CollectionManager.getInstance().getCollection();
         linkedList.sort(Comparator.comparing(Dragon::name));
 
-    String result = linkedList.stream()
-            .collect(Collectors.groupingBy(Dragon::name, Collectors.counting())).entrySet().stream()
-            .sorted(Map.Entry.comparingByKey())
-            .map(entry -> "Элементов коллекции с именем " + entry.getKey() + ": " + entry.getValue())
-            .collect(Collectors.joining("\n"));
+        String result;
+        synchronized(linkedList) {
+            result = linkedList.stream()
+                    .collect(Collectors.groupingBy(Dragon::name, Collectors.counting())).entrySet().stream()
+                    .sorted(Map.Entry.comparingByKey())
+                    .map(entry -> "Элементов коллекции с именем " + entry.getKey() + ": " + entry.getValue())
+                    .collect(Collectors.joining("\n"));
+        }
 
         return new Response(200, new ResponseClaster(outInQuiteMode, result));
     }

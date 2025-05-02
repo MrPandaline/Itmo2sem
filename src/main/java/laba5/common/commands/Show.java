@@ -10,6 +10,7 @@ import laba5.server.logic.CollectionManager;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Класс команды, реализующий вывод всех элементов коллекции.
@@ -24,15 +25,18 @@ public class Show implements IServerSideCommand{
 
     @Override
     public Response execute(String[] args, User user) {
-        LinkedList<Dragon> collection = CollectionManager.getInstance().getCollection();
+        List<Dragon> collection = CollectionManager.getInstance().getCollection();
         StringBuilder sb = new StringBuilder();
         Collections.sort(collection);
         int status;
 
         if (!collection.isEmpty()) {
             status = 200;
-            for (Object object : collection) {
-                sb.append(object.toString()).append('\n').append('\n');
+            //TODO: надо сделать ограничение по числу выводимых элементов коллекции т.к. если пользователю вылетит полторы тыщи элементов, то будет так себе
+            synchronized (collection) {
+                for (Object object : collection) {
+                    sb.append(object.toString()).append('\n').append('\n');
+                }
             }
         }
         else {

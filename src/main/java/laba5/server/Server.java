@@ -7,7 +7,6 @@ import laba5.common.dataExchanging.Request;
 import laba5.common.dataExchanging.Response;
 import laba5.common.dataExchanging.ResponseClaster;
 import laba5.common.model.User;
-import laba5.server.logic.CollectionManager;
 import laba5.server.logic.DBManager;
 
 import java.io.*;
@@ -16,7 +15,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
 
 /**
  * Класс, объединяющий все серверные модули.
@@ -37,6 +36,10 @@ public class Server {
     private boolean isServerRunning = true;
 
     private static final int BUFFER_SIZE = 8196; // Увеличенный размер буфера для больших объектов
+
+    private final ForkJoinPool commandExecutorsPool = new ForkJoinPool();
+
+    private final ExecutorService responseSenderPool = Executors.newCachedThreadPool();
 
     /**
      * Конструктор сервера. Инициализирует всех серверных менеджеров.
@@ -73,7 +76,15 @@ public class Server {
                     if (key.isAcceptable()) {
                         acceptClient(selector, serverChannel);
                     } else if (key.isReadable()) {
-                        readFromClient(key);
+                        Runnable readTask = () -> {
+                            try {
+                                readFromClient(key);
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                        };
+                        Thread readThread = new Thread(readTask);
+                        readThread.start();
                     } else if (key.isWritable()) {
                         writeToClient(key);
                     }
@@ -150,9 +161,13 @@ public class Server {
             Request request = (Request) ois.readObject();
             System.out.println("Получен запрос от " + clientChannel.getRemoteAddress() + ": " + request);
 
-            Response response;
             if (request.command() != null) {
-                response = request.command().execute(request.args(), request.user());
+                commandExecutorsPool.submit(() -> {
+                    Response response = request.command().execute(request.args(), request.user());
+                    clientResponseQueues.get(clientChannel).add(response);
+                    key.interestOps(SelectionKey.OP_WRITE);
+                    key.selector().wakeup();
+                });
             }
             //TODO: Заставить правильно работать код с юзером.
             else {
@@ -187,8 +202,9 @@ public class Server {
                         responseMessage = "Произошла ошибка при вставке пользователя в таблицу! Повторите попытку.";
                     }
                 }
-                response = new Response(status, new ResponseClaster(false, responseMessage));
+                clientResponseQueues.get(clientChannel).add(new Response(status, new ResponseClaster(false, responseMessage)));
             }
+            Response response = (Response) clientResponseQueues.get(clientChannel).poll();
             IServerSideCommand save = new Save();
             save.execute(request.args(), new User("",""));
             System.out.println(response);
@@ -206,33 +222,42 @@ public class Server {
 
     private void writeToClient(SelectionKey key) throws IOException {
         SocketChannel clientChannel = (SocketChannel) key.channel();
+        //TODO: вот тут надо заюзать потокобезопасную коллекцию
         Queue<Object> queue = clientResponseQueues.get(clientChannel);
 
         if (!queue.isEmpty()) {
-            Object data = queue.poll();
-            System.out.println("Ответ клиенту: " + data);
-            try {
-                ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                ObjectOutputStream oos = new ObjectOutputStream(bos);
-                oos.flush();
-                oos.writeObject(data);
+            responseSenderPool.submit(() -> {
+                Object data = queue.poll();
+                System.out.println("Ответ клиенту: " + data);
+                try {
+                    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                    ObjectOutputStream oos = new ObjectOutputStream(bos);
+                    oos.flush();
+                    oos.writeObject(data);
 
-                ByteBuffer buffer = ByteBuffer.wrap(bos.toByteArray());
-                clientChannel.write(buffer);
+                    ByteBuffer buffer = ByteBuffer.wrap(bos.toByteArray());
+                    while (buffer.hasRemaining()) {
+                        clientChannel.write(buffer);
+                    }
 
-                System.out.println("Данные клиенту отправил");
+                    System.out.println("Данные клиенту отправил");
 
-                if (!queue.isEmpty()) {
-                    key.interestOps(SelectionKey.OP_READ);
+                    if (!queue.isEmpty()) {
+                        key.interestOps(SelectionKey.OP_WRITE);
+                    }else {
+                        key.interestOps(SelectionKey.OP_READ);
+                        closeClientConnection(clientChannel, key);
+                    }
+                } catch (IOException e) {
+                    System.err.println("Ошибка при отправке ответа клиенту: " + e.getMessage());
+                    e.printStackTrace();
+                    try {
+                        closeClientConnection(clientChannel, key);
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
                 }
-                else {
-                    closeClientConnection(clientChannel, key);
-                }
-            } catch (IOException e) {
-                System.err.println("Ошибка при отправке ответа клиенту: " + e.getMessage());
-                e.printStackTrace();
-                closeClientConnection(clientChannel, key);
-            }
+            });
         }
     }
 
@@ -251,6 +276,8 @@ public class Server {
      */
     public void turnOffServer(){
         isServerRunning = false;
+        commandExecutorsPool.shutdown();
+        responseSenderPool.shutdown();
     }
 }
 

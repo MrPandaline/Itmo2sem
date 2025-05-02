@@ -9,6 +9,7 @@ import laba5.server.logic.CollectionManager;
 import laba5.server.storage.IModelStorageManager;
 
 import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Класс команды, реализующий сохранение элементов коллекции в хранилище.
@@ -23,7 +24,7 @@ public class Save implements IServerSideCommand{
 
     @Override
     public Response execute(String[] args, User user) {
-        LinkedList<Dragon> collection = CollectionManager.getInstance().getCollection();
+        List<Dragon> collection = CollectionManager.getInstance().getCollection();
         //TODO: надо посмотреть нужен ли тут сейв вообще?
         return new Response(200, new ResponseClaster(outInQuiteMode, "Коллекция сохранена в файл! \n"));
     }

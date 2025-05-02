@@ -17,7 +17,7 @@ import java.util.function.Predicate;
 public class CollectionManager {
 
     /** Коллекция, данная по заданию.*/
-    private LinkedList<Dragon> collection;
+    private final List<Dragon> collection;
 
     /** Дата инициализации коллекции. Обновляется каждый раз при запуске приложения.*/
     private final java.time.ZonedDateTime initializationTime;
@@ -26,9 +26,9 @@ public class CollectionManager {
         initializationTime = java.time.ZonedDateTime.now();
     }
 
-    private DBManager dbManager;
+    private final DBManager dbManager;
 
-    private HashMap<Dragon, User> dragonUserMap = new HashMap<>();
+    private final HashMap<Dragon, User> dragonUserMap = new HashMap<>();
 
     private static CollectionManager instance;
 
@@ -37,7 +37,7 @@ public class CollectionManager {
      * */
     private CollectionManager()
     {
-        this.collection = new LinkedList<Dragon>();
+        this.collection = Collections.synchronizedList(new LinkedList<>());
         this.dbManager = DBManager.getInstance();
         load();
         Collections.sort(collection);
@@ -52,13 +52,8 @@ public class CollectionManager {
     }
 
     /** Метод получения используемой коллекции. */
-    public LinkedList<Dragon> getCollection() {
+    public List<Dragon> getCollection() {
         return collection;
-    }
-
-    /**Метод, позволяющий заменить используемую коллекцию.*/
-    public void setCollection(LinkedList<Dragon> collection) {
-        this.collection = collection;
     }
 
     /** Метод, возвращающий дату и время инициализации коллекции.*/
@@ -97,17 +92,21 @@ public class CollectionManager {
             }
         }
         if (!flag){
-            for (Dragon dragon : removed){
-                dbManager.insertDragon(dragon, dragon.creatorId());
+            synchronized (collection) {
+                for (Dragon dragon : removed) {
+                    dbManager.insertDragon(dragon, dragon.creatorId());
+                }
             }
         } else{
-            flag = collection.removeIf(predicate);
+            synchronized (collection) {
+                flag = collection.removeIf(predicate);
+            }
         }
         return flag;
     }
 
     public Dragon poll(User user){
-        Dragon dragon = collection.poll();
+        Dragon dragon = collection.get(0);
         if (dragon != null && user.id() == dragon.creatorId()) {
             boolean flag = dbManager.removeDragon(dragon.id());
             if (!flag) {
@@ -129,11 +128,12 @@ public class CollectionManager {
             }
         }
         if (!flag){
+
             for (Dragon dragon : removed){
                 dbManager.insertDragon(dragon, dragon.creatorId());
             }
         }
-        else { collection.removeIf(dragon -> user.id() == dragon.creatorId()); ;}
+        else { synchronized (collection){collection.removeIf(dragon -> user.id() == dragon.creatorId()); }}
         return flag;
     }
 
@@ -156,9 +156,11 @@ public class CollectionManager {
         if (user.id() == element.creatorId()) {
             flag = dbManager.updateDragon(element);
             if (flag) {
-                for (Dragon dragon : collection) {
-                    if (dragon.id() == id) {
-                        collection.set(collection.indexOf(dragon), element);
+                synchronized (collection) {
+                    for (Dragon dragon : collection) {
+                        if (dragon.id() == id) {
+                            collection.set(collection.indexOf(dragon), element);
+                        }
                     }
                 }
             }

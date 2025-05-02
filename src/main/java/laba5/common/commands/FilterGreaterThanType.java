@@ -8,10 +8,7 @@ import laba5.common.model.modelEnums.DragonType;
 import laba5.server.Server;
 import laba5.server.logic.CollectionManager;
 
-import java.util.ArrayDeque;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -29,7 +26,7 @@ public class FilterGreaterThanType implements IServerSideCommand{
     @Override
     public Response execute(String[] args, User user) {
 
-        LinkedList<Dragon> linkedList = CollectionManager.getInstance().getCollection();
+        List<Dragon> linkedList = CollectionManager.getInstance().getCollection();
         Response response;
         int responseCode = 200;
         if (args.length == 0) {
@@ -37,11 +34,14 @@ public class FilterGreaterThanType implements IServerSideCommand{
         } else {
             try{
                 DragonType dragonType = DragonType.valueOf(args[0].toUpperCase());
-                String result = linkedList.stream()
+                String result;
+                synchronized (linkedList) {
+                result = linkedList.stream()
                         .sorted(Comparator.comparing(Dragon::dragonType))
                         .filter(dragon -> dragon.dragonType().compareTo(dragonType) > 0)
                         .map(Object::toString)
                         .collect(Collectors.joining("\n"));
+                }
 
                 if (result.isEmpty()) {
                     result = "Нет элементов коллекции, чьё значение пол type превышает заданное!\n";
