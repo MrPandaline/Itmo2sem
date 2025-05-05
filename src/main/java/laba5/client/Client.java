@@ -32,8 +32,22 @@ public class Client {
 
         public UserAuthorizer(){
             ioManager.printMessage("Введите свой логин: ", false);
-            String username = ioManager.getRawInput().split(" ")[0];
-            String password = ioManager.getPasswordHash();
+
+            String username = null;
+            String password = null;
+            while (username == null){
+                String name = ioManager.getRawInput();
+                if (!(name == null || name.isEmpty()) ){
+                    username = name.split(" ")[0];
+                }
+            }
+
+            while (password == null){
+                String pass = ioManager.getPasswordHash();
+                if (!(pass == null || pass.isEmpty()) ){
+                    password = pass.split(" ")[0];
+                }
+            }
             this.user = new User(username, password);
             userRequest = new Request(null, user,null, false, null);
         }
@@ -85,7 +99,7 @@ public class Client {
 
     private static final int MAX_RECONNECT_ATTEMPTS = 5;
     private static final int RECONNECT_DELAY_MS = 5000;
-    private static final int SOCKET_TIMEOUT_MS = 5000;
+    private static final int SOCKET_TIMEOUT_MS = 50000;
 
     /**
      * Конструктор клиентов. Инициализирует всех его менеджеров.
@@ -126,14 +140,14 @@ public class Client {
                 os.writeObject(request);
                 os.flush();
 
-                //System.out.println("Объект отправлен: " + request);
+                System.out.println("Объект отправлен: " + request);
 
                 ObjectInputStream is = new ObjectInputStream(socket.getInputStream());
-                //System.out.println("Получил канал от сервера!");
+                System.out.println("Получил канал от сервера!");
 
                 Response resp = (Response) is.readObject();
 
-                //System.out.println(resp);
+                System.out.println(resp);
                 attempts = MAX_RECONNECT_ATTEMPTS;
                 return resp;
             } catch (ConnectException e) {

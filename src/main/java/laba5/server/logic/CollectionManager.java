@@ -70,8 +70,16 @@ public class CollectionManager {
     public boolean add(Dragon element){
         boolean flag = dbManager.insertDragon(element, element.creatorId());
         if (flag) {
-            long id = dbManager.selectDragon().stream().filter(dragon -> dragon.name().equals(element.name()) &&
-                    dragon.killer().equals(element.killer())).findFirst().get().id();
+            LinkedList<Dragon> dragons = dbManager.selectDragon();
+            long id;
+            if (element.killer() != null) {
+                id = dragons.stream().filter(dragon -> dragon.name().equals(element.name()) &&
+                        dragon.killer().equals(element.killer())).findFirst().get().id();
+            }
+            else {
+                id = dragons.stream().filter(dragon -> dragon.name().equals(element.name()) &&
+                        dragon.creationDate().equals(element.creationDate())).findFirst().get().id();
+            }
             element.id(id);
             collection.add(element);
         }
@@ -138,9 +146,11 @@ public class CollectionManager {
     }
 
     public void load(){
+        System.out.println("я тута (load в CollectionManager)");
         try {
-            LinkedList<User> users = dbManager.selectUser();
+            HashMap<Integer, User> users = dbManager.selectUser();
             for (Dragon dragon : dbManager.selectDragon()) {
+                System.out.println("зашёл в цикл: "+ dragon.name());
                 collection.add(dragon);
                 dragonUserMap.put(dragon, users.get((int) (dragon.creatorId()-1)));
             }

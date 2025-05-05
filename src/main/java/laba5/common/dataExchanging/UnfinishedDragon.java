@@ -6,10 +6,11 @@ import laba5.common.model.Person;
 import laba5.common.model.modelEnums.DragonCharacter;
 import laba5.common.model.modelEnums.DragonType;
 
+import java.io.Serializable;
 import java.time.ZonedDateTime;
 
 public record UnfinishedDragon(String name, Coordinates coords, long age, String description,
-                               DragonType dragonType, DragonCharacter dragonCharacter, Person killer) {
+                               DragonType dragonType, DragonCharacter dragonCharacter, Person killer) implements Serializable {
 
     public Dragon buildDragon(ZonedDateTime creationTime, long creatorId) {
         return new Dragon(name, coords, age, description, dragonType, dragonCharacter,

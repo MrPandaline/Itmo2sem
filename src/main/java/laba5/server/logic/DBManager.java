@@ -11,6 +11,7 @@ import laba5.server.db.DragonDBProcessor;
 import laba5.server.db.UserDBProcessor;
 
 import java.sql.*;
+import java.util.HashMap;
 import java.util.LinkedList;
 
 public class DBManager {
@@ -156,7 +157,7 @@ public class DBManager {
         return dbDragonProcessor.remove(id);
     }
 
-    public LinkedList<User> selectUser() throws SQLException { return dbUserProcessor.select(); }
+    public HashMap<Integer,User> selectUser() throws SQLException { return dbUserProcessor.select(); }
     public boolean insertUser(User user) throws SQLException { return dbUserProcessor.insert(user); }
     public boolean updateUser(User user) throws SQLException { return dbUserProcessor.update(user); }
 

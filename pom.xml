@@ -38,7 +38,7 @@
 							</descriptorRefs>
 							<archive>
 								<manifest>
-									<mainClass>laba5.client.Main</mainClass>
+									<mainClass>laba5.server.Main</mainClass>
 								</manifest>
 							</archive>
 						</configuration>

@@ -8,6 +8,7 @@ import laba5.server.logic.DBManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.LinkedList;
 
 public class UserDBProcessor {
@@ -17,12 +18,12 @@ public class UserDBProcessor {
         this.dbManager = dbManager;
     }
 
-    public LinkedList<User> select() throws SQLException {
-        LinkedList<User> linkedListUsers = new LinkedList<>();
+    public HashMap<Integer, User> select() throws SQLException {
+        HashMap<Integer, User> linkedListUsers = new HashMap<>();
         try {
             ResultSet rs = dbManager.getStatement().executeQuery("SELECT * FROM DragonUser;");
             while (rs.next()) {
-                linkedListUsers.add(new User(rs.getInt("id"), rs.getString("login"), rs.getString("password")));
+                linkedListUsers.put(rs.getInt("id"),new User(rs.getInt("id"), rs.getString("login"), rs.getString("password")));
             }
             rs.close();
             return linkedListUsers;

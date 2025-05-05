@@ -10,10 +10,8 @@ import laba5.common.model.modelEnums.DragonCharacter;
 import laba5.common.model.modelEnums.DragonType;
 import laba5.server.logic.DBManager;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
+import java.sql.*;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.LinkedList;
 
@@ -78,7 +76,7 @@ public class DragonDBProcessor {
 
                 Dragon dragon = new Dragon(rs.getString("name"), coordinates, rs.getLong("age"),
                         description, dragonType, dragonCharacter, person, rs.getLong("id"),
-                        rs.getObject("creationDate", ZonedDateTime.class),
+                        rs.getTimestamp("creationDate").toInstant().atZone(ZoneId.systemDefault()),
                         rs.getLong("creator_id"));
 
                 dragons.add(dragon);

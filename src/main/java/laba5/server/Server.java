@@ -27,6 +27,7 @@ public class Server {
     private final Map<SocketChannel, Queue<Object>> clientResponseQueues = new ConcurrentHashMap<>();
     private final Map<SocketChannel, ByteBuffer> clientRequestBuffers = new ConcurrentHashMap<>();
     private final Map<SocketChannel, Integer> expectedSizes = new ConcurrentHashMap<>();
+    private final Set<SocketChannel> underWork = new CopyOnWriteArraySet<>();
     private final DBManager dbManager;
 
 
@@ -75,21 +76,27 @@ public class Server {
 
                     if (key.isAcceptable()) {
                         acceptClient(selector, serverChannel);
-                    } else if (key.isReadable()) {
-                        Runnable readTask = () -> {
+                    } else if (key.isReadable() && !underWork.contains(key.channel())) {
+                        SocketChannel client = (SocketChannel) key.channel();
+                        underWork.add(client);
+                        new Thread(() -> {
                             try {
                                 readFromClient(key);
                             } catch (IOException e) {
-                                throw new RuntimeException(e);
+                                System.err.println("Ошибка чтения от клиента: ");
+                                e.printStackTrace();
+                                try {
+                                    closeClientConnection(client, key);
+                                } catch (IOException ex) {
+                                    ex.printStackTrace();
+                                }
                             }
-                        };
-                        Thread readThread = new Thread(readTask);
-                        readThread.start();
-                    } else if (key.isWritable()) {
-                        writeToClient(key);
+                        }).start();
+
+                        //Thread.sleep(100);
                     }
                 }
-            } catch (IOException e) {
+            } catch (IOException /*| InterruptedException*/ e) {
                 System.err.println("Ошибка при обработке соединения: " + e.getMessage());
                 System.exit(0);
             }
@@ -100,7 +107,7 @@ public class Server {
         SocketChannel clientChannel = serverChannel.accept();
         clientChannel.configureBlocking(false);
         clientChannel.register(selector, SelectionKey.OP_READ);
-        clientResponseQueues.put(clientChannel, new LinkedList<>());
+        clientResponseQueues.put(clientChannel, new ArrayDeque<>());
         clientRequestBuffers.put(clientChannel, ByteBuffer.allocate(BUFFER_SIZE));
         System.out.println("Client connected: " + clientChannel.getRemoteAddress());
     }
@@ -162,20 +169,26 @@ public class Server {
             System.out.println("Получен запрос от " + clientChannel.getRemoteAddress() + ": " + request);
 
             if (request.command() != null) {
-                commandExecutorsPool.submit(() -> {
+                commandExecutorsPool.execute(() -> {
                     Response response = request.command().execute(request.args(), request.user());
+                    System.out.println("Команда выполнена: " +  response);
+
                     clientResponseQueues.get(clientChannel).add(response);
+
+                    System.out.println("Записал в очередь");
                     key.interestOps(SelectionKey.OP_WRITE);
-                    key.selector().wakeup();
+                    try {
+                        writeToClient(key);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 });
-            }
-            //TODO: Заставить правильно работать код с юзером.
-            else {
+            } else {
                 User clientUser = request.user();
                 long status = -1;
                 String responseMessage = null;
                 boolean completed = dbManager.insertUser(clientUser);
-                LinkedList<User> users = dbManager.selectUser();
+                Collection<User> users = dbManager.selectUser().values();
                 Optional<Long> userId = users.stream().filter(user -> user.login()
                         .equals(clientUser.login())).map(User::id).findFirst();
 
@@ -202,15 +215,15 @@ public class Server {
                         responseMessage = "Произошла ошибка при вставке пользователя в таблицу! Повторите попытку.";
                     }
                 }
-                clientResponseQueues.get(clientChannel).add(new Response(status, new ResponseClaster(false, responseMessage)));
+                System.out.println("Сообщение на вывод:" + responseMessage);
+                Response resp = new Response(status, new ResponseClaster(false, responseMessage));
+                clientResponseQueues.get(clientChannel).add(resp);
+                writeToClient(key);
             }
-            Response response = (Response) clientResponseQueues.get(clientChannel).poll();
+
             IServerSideCommand save = new Save();
             save.execute(request.args(), new User("",""));
-            System.out.println(response);
 
-            clientResponseQueues.get(clientChannel).add(response);
-            key.interestOps(SelectionKey.OP_WRITE);
         } catch (ClassNotFoundException e) {
             System.err.println("Ошибка при десериализации запроса: " + e.getMessage());
             e.printStackTrace();
@@ -236,9 +249,9 @@ public class Server {
                     oos.writeObject(data);
 
                     ByteBuffer buffer = ByteBuffer.wrap(bos.toByteArray());
-                    while (buffer.hasRemaining()) {
-                        clientChannel.write(buffer);
-                    }
+
+                    clientChannel.write(buffer);
+
 
                     System.out.println("Данные клиенту отправил");
 
@@ -264,6 +277,7 @@ public class Server {
     private void closeClientConnection(SocketChannel clientChannel, SelectionKey key) throws IOException {
         clientResponseQueues.remove(clientChannel);
         clientRequestBuffers.remove(clientChannel);
+        underWork.remove(clientChannel);
         System.out.println("Клиент отключился: " + clientChannel.getRemoteAddress());
         clientChannel.finishConnect();
         clientChannel.close();
