@@ -10,6 +10,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -22,38 +23,52 @@ import java.util.Set;
  */
 public class ExecuteScript implements IClientSideCommand{
 
-    private static final Set<String> executedScripts = new HashSet<>();
+    private static final HashMap<String, Integer> executedScripts = new HashMap<>();
+    private int recursionLimit = 1;
 
     @Override
     public String getDescription() {
-        return "Позволяет считать и исполнить скрипт из указанного файла. \nТребует ввода названия .txt файла.";
+        return "Позволяет считать и исполнить скрипт из указанного файла. \nТребует ввода названия .txt файла. " +
+                "После названия файла можно ввести число - максимальную глубину рекурсии.";
     }
 
     @Override
     public void execute(Client client, String[] args) {
         IIOManager ioManager = client.getIoManager();
         ArrayList<String> commands = new ArrayList<>();
-        try (BufferedReader br = new BufferedReader(new FileReader(args[0]))) {
-            for (String line = br.readLine(); line != null; line = br.readLine()) {
-                if (line.startsWith("execute_script")){
-                    String[] parts = line.split(" ", 2);
-                    if (parts.length > 1){
-                        if (executedScripts.contains(parts[1])){
-                            throw new RecursionDetected();
-                        }
-                       executedScripts.add(parts[1]);
-                    }
-                    executedScripts.add(line);
-                }
 
-                commands.add(line);
+        if (args.length == 0) {
+            client.getIoManager().printError("Ошибка! Вы не передали название скрипта!");
+        }
+        else {
+            if (recursionLimit == 1 && args.length > 1) {
+                recursionLimit = Integer.parseInt(args[1]);
             }
-            ioManager.addCommandsToSimulator(commands);
+            try (BufferedReader br = new BufferedReader(new FileReader(args[0]))) {
+                for (String line = br.readLine(); line != null; line = br.readLine()) {
+                    if (line.startsWith("execute_script")) {
+                        String[] parts = line.split(" ", 4);
+                        if (parts.length > 1) {
+                            if (!executedScripts.containsKey(parts[1])) {
+                                executedScripts.put(parts[1], 0);
+                            }
+                            if (executedScripts.get(parts[1]) > recursionLimit) {
+                                executedScripts.clear();
+                                throw new RecursionDetected();
+                            } else {
+                                executedScripts.put(parts[1], executedScripts.get(parts[1]) + 1);
+                            }
+                        }
+                    }
+                    commands.add(line);
+                }
+                ioManager.addCommandsToSimulator(commands);
 
-        } catch (FileNotFoundException e) {
-            client.getIoManager().printError("Файл со скриптом не найден!");
-        } catch (IOException e) {
-            client.getIoManager().printError("Что-то пошло не так... Повторите ввод. \n");
+            } catch (FileNotFoundException e) {
+                client.getIoManager().printError("Файл со скриптом не найден!");
+            } catch (IOException e) {
+                client.getIoManager().printError("Что-то пошло не так... Повторите ввод. \n");
+            }
         }
     }
 }
