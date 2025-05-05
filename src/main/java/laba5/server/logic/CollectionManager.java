@@ -68,17 +68,27 @@ public class CollectionManager {
 
 
     public boolean add(Dragon element){
+        if (dragonUserMap.containsKey(element)) {
+            return false;
+        }
+
         boolean flag = dbManager.insertDragon(element, element.creatorId());
         if (flag) {
-            LinkedList<Dragon> dragons = dbManager.selectDragon();
+            LinkedList<Dragon> dragons = dbManager.selectDragon(element.name());
             long id;
             if (element.killer() != null) {
-                id = dragons.stream().filter(dragon -> dragon.name().equals(element.name()) &&
-                        dragon.killer().equals(element.killer())).findFirst().get().id();
+                System.out.println(element.killer().name() + " "+ element.name());
+                id = dragons.stream()
+                        .filter(dragon -> dragon.name().equals(element.name()))
+                        .filter(dragon -> dragon.killer().name().equals(element.killer().name()))
+                        .findFirst().get().id();
             }
             else {
-                id = dragons.stream().filter(dragon -> dragon.name().equals(element.name()) &&
-                        dragon.creationDate().equals(element.creationDate())).findFirst().get().id();
+                id = dragons.stream()
+                        .filter(dragon -> dragon.name().equals(element.name()))
+                        .filter(dragon -> dragon.age() == element.age())
+                        .filter(dragon -> dragon.dragonType().equals(element.dragonType()))
+                        .findFirst().get().id();
             }
             element.id(id);
             collection.add(element);
@@ -88,9 +98,9 @@ public class CollectionManager {
 
     public boolean remove(Predicate<Dragon> predicate, User user){
         LinkedList<Dragon> removed = new LinkedList<>();
-        boolean flag = true;
+        boolean flag = false;
         for (Dragon dragon : collection){
-            if (flag && predicate.test(dragon)){
+            if (!flag && predicate.test(dragon)){
                 if (user.id() == dragon.creatorId()) {
                     flag = dbManager.removeDragon(dragon.id());
                 }

@@ -43,50 +43,86 @@ public class DragonDBProcessor {
                             + "LEFT JOIN Country ON Person.id_country = Country.id;"
             );
 
-            while (rs.next()) {
-                String description = null;
-                try {
-                    description = rs.getString("description");
-                } catch (IllegalArgumentException | NullPointerException ignored) {}
-                DragonType dragonType = null;
-                try {
-                    dragonType = Enum.valueOf(DragonType.class, rs.getString("d_type"));
-                } catch (IllegalArgumentException | NullPointerException ignored) {}
-
-                DragonCharacter dragonCharacter = null;
-                try {
-                    dragonCharacter = Enum.valueOf(DragonCharacter.class, rs.getString("d_character"));
-                } catch (IllegalArgumentException | NullPointerException ignored) {}
-
-                Person person = null;
-                try {
-                    rs.getLong("p_id");
-                    Color eyeColor = Enum.valueOf(Color.class, rs.getString("p_eyeColor"));
-                    Color hairColor = Enum.valueOf(Color.class, rs.getString("p_hairColor"));
-                    Country nationality = Enum.valueOf(Country.class, rs.getString("p_nationality"));
-                    Location location = new Location(rs.getFloat("l_x"), rs.getDouble("l_y"),
-                            rs.getInt("l_z"));
-                    person = new Person(rs.getString("p_name"), rs.getInt("p_height"), eyeColor,
-                            hairColor, nationality, location);
-
-
-                } catch (IllegalArgumentException | NullPointerException ignored) {}
-
-                Coordinates coordinates = new Coordinates(rs.getFloat("c_x"), rs.getInt("c_y"));
-
-                Dragon dragon = new Dragon(rs.getString("name"), coordinates, rs.getLong("age"),
-                        description, dragonType, dragonCharacter, person, rs.getLong("id"),
-                        rs.getTimestamp("creationDate").toInstant().atZone(ZoneId.systemDefault()),
-                        rs.getLong("creator_id"));
-
-                dragons.add(dragon);
-            }
-            rs.close();
+            dragons = getDragons(rs);
             return dragons;
         } catch (SQLException e) {
             System.err.println(e.getMessage());
             return dragons;
         }
+    }
+
+    public LinkedList<Dragon> select(String name){
+        LinkedList<Dragon> dragons = new LinkedList<>();
+        try (PreparedStatement prst = dbManager.getPreparedStatement(
+                    "SELECT Dragon.id AS id, Dragon.name AS name, "
+                            + "Coordinates.x AS c_x, Coordinates.y AS c_y, Dragon.creationDate AS creationDate, "
+                            + "Dragon.age AS age, Dragon.description AS description, dragonType.name AS d_type, "
+                            + "dragonCharacter.name AS d_character, Person.name AS p_name, Person.height AS p_height, "
+                            + "eyeColor.name AS p_eyeColor, hairColor.name AS p_hairColor, Country.name AS p_nationality, "
+                            + "Location.x AS l_x, Location.y AS l_y, Location.z AS l_z , "
+                            + "Dragon.id_killer AS p_id, Dragon.id_user AS creator_id FROM Dragon "
+                            + "JOIN Coordinates ON Coordinates.id = Dragon.id_coordinates "
+                            + "LEFT JOIN DragonType ON Dragon.id_dragonType = DragonType.id "
+                            + "LEFT JOIN DragonCharacter ON Dragon.id_dragonCharacter = DragonCharacter.id "
+                            + "LEFT JOIN Person ON Dragon.id_killer = Person.id "
+                            + "LEFT JOIN Location ON Person.id_location = Location.id "
+                            + "LEFT JOIN Color AS eyeColor ON Person.id_eyeColor = eyeColor.id "
+                            + "LEFT JOIN Color AS hairColor ON Person.id_hairColor = hairColor.id "
+                            + "LEFT JOIN Country ON Person.id_country = Country.id "
+                            + "WHERE Dragon.name = ?;")){
+
+            prst.setString(1, name);
+            ResultSet rs = prst.executeQuery();
+            dragons = getDragons(rs);
+            return dragons;
+        } catch (SQLException e) {
+            System.err.println(e.getMessage());
+            return dragons;
+        }
+    }
+
+    private LinkedList<Dragon> getDragons(ResultSet rs) throws SQLException {
+        LinkedList<Dragon> dragons = new LinkedList<>();
+        while (rs.next()) {
+            String description = null;
+            try {
+                description = rs.getString("description");
+            } catch (IllegalArgumentException | NullPointerException ignored) {}
+            DragonType dragonType = null;
+            try {
+                dragonType = Enum.valueOf(DragonType.class, rs.getString("d_type"));
+            } catch (IllegalArgumentException | NullPointerException ignored) {}
+
+            DragonCharacter dragonCharacter = null;
+            try {
+                dragonCharacter = Enum.valueOf(DragonCharacter.class, rs.getString("d_character"));
+            } catch (IllegalArgumentException | NullPointerException ignored) {}
+
+            Person person = null;
+            try {
+                rs.getLong("p_id");
+                Color eyeColor = Enum.valueOf(Color.class, rs.getString("p_eyeColor"));
+                Color hairColor = Enum.valueOf(Color.class, rs.getString("p_hairColor"));
+                Country nationality = Enum.valueOf(Country.class, rs.getString("p_nationality"));
+                Location location = new Location(rs.getFloat("l_x"), rs.getDouble("l_y"),
+                        rs.getInt("l_z"));
+                person = new Person(rs.getString("p_name"), rs.getInt("p_height"), eyeColor,
+                        hairColor, nationality, location);
+
+
+            } catch (IllegalArgumentException | NullPointerException ignored) {}
+
+            Coordinates coordinates = new Coordinates(rs.getFloat("c_x"), rs.getInt("c_y"));
+
+            Dragon dragon = new Dragon(rs.getString("name"), coordinates, rs.getLong("age"),
+                    description, dragonType, dragonCharacter, person, rs.getLong("id"),
+                    rs.getTimestamp("creationDate").toInstant().atZone(ZoneId.systemDefault()),
+                    rs.getLong("creator_id"));
+
+            dragons.add(dragon);
+        }
+        rs.close();
+        return dragons;
     }
 
     public boolean insert(Dragon dragon, long userID) {
@@ -138,8 +174,8 @@ public class DragonDBProcessor {
     }
 
     private long insert(Location location) throws SQLException {
-        try (PreparedStatement stmt = dbManager.getPreparedStatementRGK("INSERT INTO Location(x, y, z) " +
-                "+VALUES (?, ?, ?)"); ) {
+        try (PreparedStatement stmt = dbManager.getPreparedStatementRGK("INSERT INTO Location(x, y, z) "
+                + "VALUES (?, ?, ?)")) {
             stmt.setFloat(1, location.x());
             stmt.setDouble(2, location.y());
             stmt.setInt(3, location.z());
@@ -179,7 +215,6 @@ public class DragonDBProcessor {
             stmt.setLong(4, killer.hairColor().ordinal()+1);
             stmt.setLong(5, killer.nationality().ordinal()+1);
             stmt.setLong(6, insert(killer.location()));
-
             if (stmt.executeUpdate() == 0) { throw new SQLException("Вставка убийцы не выполнена! Таблица не изменена."); }
             try (ResultSet gk = stmt.getGeneratedKeys()) {
                 if (gk.next()) {
@@ -188,6 +223,7 @@ public class DragonDBProcessor {
                     throw new SQLException("Вставка убийцы не выполнена! ID не получен.");
                 }
             }
+
         }
     }
 

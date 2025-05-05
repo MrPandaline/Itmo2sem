@@ -147,6 +147,11 @@ public class DBManager {
     public LinkedList<Dragon> selectDragon() {
         return dbDragonProcessor.select();
     }
+
+    public LinkedList<Dragon> selectDragon(String name) {
+        return dbDragonProcessor.select(name);
+    }
+
     public boolean insertDragon(Dragon dragon, long userID) {
         return dbDragonProcessor.insert(dragon, userID);
     }

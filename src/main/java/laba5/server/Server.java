@@ -92,11 +92,9 @@ public class Server {
                                 }
                             }
                         }).start();
-
-                        //Thread.sleep(100);
                     }
                 }
-            } catch (IOException /*| InterruptedException*/ e) {
+            } catch (IOException e) {
                 System.err.println("Ошибка при обработке соединения: " + e.getMessage());
                 System.exit(0);
             }

@@ -99,7 +99,7 @@ public class Client {
 
     private static final int MAX_RECONNECT_ATTEMPTS = 5;
     private static final int RECONNECT_DELAY_MS = 5000;
-    private static final int SOCKET_TIMEOUT_MS = 50000;
+    private static final int SOCKET_TIMEOUT_MS = 1000;
 
     /**
      * Конструктор клиентов. Инициализирует всех его менеджеров.
@@ -140,14 +140,14 @@ public class Client {
                 os.writeObject(request);
                 os.flush();
 
-                System.out.println("Объект отправлен: " + request);
+                //System.out.println("Объект отправлен: " + request);
 
                 ObjectInputStream is = new ObjectInputStream(socket.getInputStream());
-                System.out.println("Получил канал от сервера!");
+                //System.out.println("Получил канал от сервера!");
 
                 Response resp = (Response) is.readObject();
 
-                System.out.println(resp);
+                //System.out.println(resp);
                 attempts = MAX_RECONNECT_ATTEMPTS;
                 return resp;
             } catch (ConnectException e) {
@@ -196,7 +196,7 @@ public class Client {
                 ioManager.printMessage(userResp.responseClaster().message(), false);
 
                 if (!((userResp.statusCode() == -1) || (userResp.statusCode() == 404) || (userResp.statusCode() == 401))) {
-                    System.out.println(userResp.statusCode());
+                    //System.out.println(userResp.statusCode());
                     userauth.getUser().id(userResp.statusCode());
                     isAutharized = true;
                 }
