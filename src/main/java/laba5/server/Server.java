@@ -16,6 +16,9 @@ import java.nio.channels.*;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Класс, объединяющий все серверные модули.
@@ -112,30 +115,30 @@ public class Server {
 
     private void readFromClient(SelectionKey key) throws IOException {
         SocketChannel clientChannel = (SocketChannel) key.channel();
-        ByteBuffer buffer = clientRequestBuffers.get(clientChannel);
-        System.out.println(Arrays.toString(buffer.array()));
+        ThreadLocal<ByteBuffer> buffer = ThreadLocal.withInitial(() -> clientRequestBuffers.get(clientChannel));
+        System.out.println(Arrays.toString(buffer.get().array()));
         int objectSize;
-        clientChannel.read(buffer);
-        System.out.println(Arrays.toString(buffer.array()));
-        int bytesRead = clientChannel.read(buffer);
+        clientChannel.read(buffer.get());
+        System.out.println(Arrays.toString(buffer.get().array()));
+        int bytesRead = clientChannel.read(buffer.get());
         if (bytesRead == -1) {
             closeClientConnection(clientChannel, key);
             return;
         }
 
-        buffer.flip();
+        buffer.get().flip();
 
         // Если мы еще не знаем размер объекта, считываем его
         if (!expectedSizes.containsKey(clientChannel)) {
-            if (buffer.remaining() < 10) {
+            if (buffer.get().remaining() < 10) {
                 // Недостаточно данных для чтения размера
-                buffer.compact();
+                buffer.get().compact();
                 return;
             }
 
             // Считываем размер объекта
-            buffer.position(6);
-            objectSize = buffer.getInt();
+            buffer.get().position(6);
+            objectSize = buffer.get().getInt();
             expectedSizes.put(clientChannel, objectSize);
         }
 
@@ -143,14 +146,32 @@ public class Server {
         System.out.println(expectedSize);
         ByteBuffer objectBuffer = ByteBuffer.allocate(expectedSize);
 
-        for (int i = 0; i < expectedSize-4; i++) {
-            byte b = buffer.get();
-            objectBuffer.put(b);
+        Lock lock = new ReentrantLock();
+        boolean isLocked = false;
+
+        while (!isLocked) {
+            isLocked = lock.tryLock();
+
+            if (!isLocked) {
+                Thread.currentThread().interrupt();
+                break;
+            }
         }
+        if (isLocked) {
+            try {
+                for (int i = 0; i < expectedSize - 4; i++) {
+                    byte b = buffer.get().get();
+                    objectBuffer.put(b);
+                }
+            } finally {
+                lock.unlock();
+            }
+        }
+
 
         if (objectBuffer.position() < expectedSize-4) {
             // Объект еще не полностью получен
-            buffer.compact();
+            buffer.get().compact();
             return;
         }
 

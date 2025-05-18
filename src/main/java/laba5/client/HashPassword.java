@@ -1,4 +1,4 @@
-package laba5.client.utils;
+package laba5.client;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;

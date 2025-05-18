@@ -1,6 +1,6 @@
 package laba5.client.input;
 
-import laba5.client.utils.HashPassword;
+import laba5.client.HashPassword;
 import laba5.common.exceptions.UnplannedAppTermination;
 import laba5.server.storage.CommandsListStoragingManager;
 import org.jline.reader.*;

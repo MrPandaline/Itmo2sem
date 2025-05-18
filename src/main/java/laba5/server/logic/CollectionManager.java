@@ -17,7 +17,7 @@ import java.util.function.Predicate;
 public class CollectionManager {
 
     /** Коллекция, данная по заданию.*/
-    private final List<Dragon> collection;
+    private List<Dragon> collection;
 
     /** Дата инициализации коллекции. Обновляется каждый раз при запуске приложения.*/
     private final java.time.ZonedDateTime initializationTime;
@@ -67,32 +67,9 @@ public class CollectionManager {
     }
 
 
-    public boolean add(Dragon element){
-        if (dragonUserMap.containsKey(element)) {
-            return false;
-        }
-
+    public boolean add(Dragon element, User user){
         boolean flag = dbManager.insertDragon(element, element.creatorId());
-        if (flag) {
-            LinkedList<Dragon> dragons = dbManager.selectDragon(element.name());
-            long id;
-            if (element.killer() != null) {
-                System.out.println(element.killer().name() + " "+ element.name());
-                id = dragons.stream()
-                        .filter(dragon -> dragon.name().equals(element.name()))
-                        .filter(dragon -> dragon.killer().name().equals(element.killer().name()))
-                        .findFirst().get().id();
-            }
-            else {
-                id = dragons.stream()
-                        .filter(dragon -> dragon.name().equals(element.name()))
-                        .filter(dragon -> dragon.age() == element.age())
-                        .filter(dragon -> dragon.dragonType().equals(element.dragonType()))
-                        .findFirst().get().id();
-            }
-            element.id(id);
-            collection.add(element);
-        }
+        load();
         return flag;
     }
 
@@ -156,7 +133,7 @@ public class CollectionManager {
     }
 
     public void load(){
-        System.out.println("я тута (load в CollectionManager)");
+        collection = Collections.synchronizedList(new LinkedList<>());
         try {
             HashMap<Integer, User> users = dbManager.selectUser();
             for (Dragon dragon : dbManager.selectDragon()) {

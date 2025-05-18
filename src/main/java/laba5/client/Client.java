@@ -56,7 +56,8 @@ public class Client {
             try {
                 return communicateWithServer(userRequest);
             } catch (IOException e){
-                e.printStackTrace();
+                ioManager.printError("Не удалось получить ответ от сервера! Перезапустите клиент позднее.\n");
+                isClientAlive = false;
                 return null;
             }
         }
@@ -99,7 +100,7 @@ public class Client {
 
     private static final int MAX_RECONNECT_ATTEMPTS = 5;
     private static final int RECONNECT_DELAY_MS = 5000;
-    private static final int SOCKET_TIMEOUT_MS = 1000;
+    private static final int SOCKET_TIMEOUT_MS = 2000;
 
     /**
      * Конструктор клиентов. Инициализирует всех его менеджеров.
@@ -190,20 +191,23 @@ public class Client {
                 }
             }
             boolean isAutharized = false;
+
             UserAuthorizer userauth = new UserAuthorizer();
-            while (!isAutharized) {
+            while (!isAutharized && isClientAlive) {
                 Response userResp = userauth.getUserResponse();
-                ioManager.printMessage(userResp.responseClaster().message(), false);
+                if (userResp != null) {
+                    ioManager.printMessage(userResp.responseClaster().message(), false);
+                }
 
                 if (!((userResp.statusCode() == -1) || (userResp.statusCode() == 404) || (userResp.statusCode() == 401))) {
                     //System.out.println(userResp.statusCode());
                     userauth.getUser().id(userResp.statusCode());
                     isAutharized = true;
-                }
-                else{
+                } else {
                     userauth = new UserAuthorizer();
                 }
             }
+
 
             while (isClientAlive) {
                 try {

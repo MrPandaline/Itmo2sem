@@ -77,6 +77,7 @@ public class DBManager {
         if (connection != null) {
             try {
                 //TODO: text и varchar привести к одному виду, понять как ограничить длину строк при вводе данных из консоли.
+                //TODO: добавить cascade
                 Statement stmt = getStatement();
                 stmt.executeUpdate("CREATE TABLE IF NOT EXISTS DragonUser(id serial PRIMARY KEY, login text NOT NULL UNIQUE, password text NOT NULL);");
                 stmt.executeUpdate("CREATE TABLE IF NOT EXISTS Color(id serial PRIMARY KEY, name varchar(40) NOT NULL);");
