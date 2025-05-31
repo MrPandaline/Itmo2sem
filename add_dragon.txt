@@ -7,4 +7,4 @@ test
 WATER
 EVIL
 
-execute_script commands.txt
+execute_script add_dragon.txt

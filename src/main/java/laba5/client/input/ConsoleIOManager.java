@@ -23,15 +23,13 @@ public class ConsoleIOManager implements IIOManager {
     private final LineReader lineReader;
     private final Terminal terminal;
     private final PrintStream standardErrStream = System.err;
-    private final CommandsListStoragingManager commandStoraging;
     private final ArrayList<String> lastSessionUserInput;
     private final ArrayList<String> emulatorBuffer;
     private boolean isUsingAutomatedInput;
 
-    public ConsoleIOManager(ArrayList<String> completerCommandNames, String emergencyFileName) {
+    public ConsoleIOManager(ArrayList<String> completerCommandNames) {
         this.lastSessionUserInput = new ArrayList<>();
         this.emulatorBuffer = new ArrayList<>();
-        this.commandStoraging = new CommandsListStoragingManager(emergencyFileName);
         
         try {
             this.terminal = TerminalBuilder.builder()
@@ -68,7 +66,6 @@ public class ConsoleIOManager implements IIOManager {
 
             if (input != null && !input.trim().isEmpty()) {
                 lastSessionUserInput.add(input);
-                commandStoraging.writeToStorage(lastSessionUserInput, false);
             }
 
         } catch (UserInterruptException e) {

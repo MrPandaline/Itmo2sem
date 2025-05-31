@@ -27,8 +27,8 @@ import java.util.concurrent.TimeUnit;
  */
 public class Client {
     public class UserAuthorizer{
-        private final User user;
-        private final Request userRequest;
+        private User user;
+        private Request userRequest;
 
         public UserAuthorizer(){
             ioManager.printMessage("Введите свой логин: ", false);
@@ -48,8 +48,13 @@ public class Client {
                     password = pass.split(" ")[0];
                 }
             }
-            this.user = new User(username, password);
+            createUserRequest(username, password);
+        }
+
+        public Request createUserRequest(String login, String passwd){
+            this.user = new User(login, passwd);
             userRequest = new Request(null, user,null, false, null);
+            return userRequest;
         }
 
         public Response getUserResponse(){
@@ -93,14 +98,11 @@ public class Client {
      * */
     private final String commandsFileName;
 
-    /**
-     *
-     */
-    private final CommandsListStoragingManager lastSessionUserInputStoragingManager;
-
     private static final int MAX_RECONNECT_ATTEMPTS = 5;
     private static final int RECONNECT_DELAY_MS = 5000;
     private static final int SOCKET_TIMEOUT_MS = 2000;
+
+    public UserAuthorizer userauth = new UserAuthorizer();
 
     /**
      * Конструктор клиентов. Инициализирует всех его менеджеров.
@@ -108,15 +110,14 @@ public class Client {
      * @param commandsFileName название файла, в котором будут храниться последние 15 использованных команды.
      * */
     public Client(IIOManager ioManager, String commandsFileName,
-               String emergencyFileName, CommandManager commandManager) {
+                CommandManager commandManager) {
         this.ioManager = ioManager;
         this.lastUsedCommands = new CommandsListStoragingManager(commandsFileName).readFromStorage(ioManager);
         this.commandsFileName = commandsFileName;
-        this.lastSessionUserInputStoragingManager = new CommandsListStoragingManager(emergencyFileName);
         this.commandManager = commandManager;
     }
 
-    private Response communicateWithServer(Request request) throws IOException {
+    public Response communicateWithServer(Request request) throws IOException {
         InetAddress host = InetAddress.getLocalHost();
         //InetAddress host = InetAddress.getByName("103.90.75.212");
         //InetAddress host = InetAddress.getByName("se.ifmo.ru");
@@ -177,36 +178,25 @@ public class Client {
      * Метод, запускающий клиент.
      */
     public void run(){
+        ArrayList<String> lastSessionUserInput = new ArrayList<>();
         try {
             String userInput;
-            ArrayList<String> lastSessionUserInput;
-            ioManager.printMessage("Введите help для получения списка доступных команд.\n", false);
-            lastSessionUserInput = lastSessionUserInputStoragingManager.readFromStorage(ioManager);
-            if (!lastSessionUserInput.isEmpty()) {
-                ioManager.printMessage("Последняя сессия была завершена некорректно. Хотите вернуться к ней?\n" +
-                        "да - вернуться к старой сессии \nкакой-либо другой набор символов - запустить новую сессию\n", false);
-                String answer = ioManager.getRawInput();
-                if (answer != null && answer.equalsIgnoreCase("да")) {
-                    ioManager.addCommandsToSimulator(lastSessionUserInput);
-                }
-            }
             boolean isAutharized = false;
+            try {
+                while (!isAutharized && isClientAlive) {
+                    Response userResp = userauth.getUserResponse();
+                    if (userResp != null) {
+                        ioManager.printMessage(userResp.responseClaster().message(), false);
+                    }
 
-            UserAuthorizer userauth = new UserAuthorizer();
-            while (!isAutharized && isClientAlive) {
-                Response userResp = userauth.getUserResponse();
-                if (userResp != null) {
-                    ioManager.printMessage(userResp.responseClaster().message(), false);
+                    if (!((userResp.statusCode() == -1) || (userResp.statusCode() == 404) || (userResp.statusCode() == 401))) {
+                        userauth.getUser().id(userResp.statusCode());
+                        isAutharized = true;
+                    } else {
+                        userauth = new UserAuthorizer();
+                    }
                 }
-
-                if (!((userResp.statusCode() == -1) || (userResp.statusCode() == 404) || (userResp.statusCode() == 401))) {
-                    //System.out.println(userResp.statusCode());
-                    userauth.getUser().id(userResp.statusCode());
-                    isAutharized = true;
-                } else {
-                    userauth = new UserAuthorizer();
-                }
-            }
+            } catch (NullPointerException ignored) {}
 
 
             while (isClientAlive) {
@@ -289,7 +279,6 @@ public class Client {
      */
     public void turnOffClient(){
         new CommandsListStoragingManager(commandsFileName).writeToStorage(lastUsedCommands, true);
-        lastSessionUserInputStoragingManager.writeToStorage(new ArrayList<>(), false);
         isClientAlive = false;
     }
 }

@@ -147,6 +147,7 @@ public class Server {
         ByteBuffer objectBuffer = ByteBuffer.allocate(expectedSize);
 
         Lock lock = new ReentrantLock();
+
         boolean isLocked = false;
 
         while (!isLocked) {
@@ -157,6 +158,7 @@ public class Server {
                 break;
             }
         }
+
         if (isLocked) {
             try {
                 for (int i = 0; i < expectedSize - 4; i++) {
@@ -164,7 +166,7 @@ public class Server {
                     objectBuffer.put(b);
                 }
             } finally {
-                lock.unlock();
+                lock.unlock(); // Освобождаем блокировку в любом случае
             }
         }
 

@@ -26,7 +26,7 @@ public class DragonDBProcessor {
         LinkedList<Dragon> dragons = new LinkedList<>();
         try {
             ResultSet rs = dbManager.getStatement().executeQuery(
-                    "SELECT Dragon.id AS id, Dragon.name AS name, "
+                        "SELECT Dragon.id AS id, Dragon.name AS name, "
                             + "Coordinates.x AS c_x, Coordinates.y AS c_y, Dragon.creationDate AS creationDate, "
                             + "Dragon.age AS age, Dragon.description AS description, dragonType.name AS d_type, "
                             + "dragonCharacter.name AS d_character, Person.name AS p_name, Person.height AS p_height, "

@@ -102,6 +102,7 @@ public class CollectionManager {
 
     public Dragon poll(User user){
         Dragon dragon = collection.get(0);
+        System.out.println(collection);
         if (dragon != null && user.id() == dragon.creatorId()) {
             boolean flag = dbManager.removeDragon(dragon.id());
             if (!flag) {

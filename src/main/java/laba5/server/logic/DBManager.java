@@ -55,7 +55,9 @@ public class DBManager {
 
         try {
             connection = DriverManager.getConnection(DB_URL, USER, PASS);
-             }
+            Statement statement = connection.createStatement();
+            //statement.execute("SET search_path TO s468126");
+        }
         catch (SQLException e) {
             System.err.println("Ошибка при соединении с базой данных!");
             e.printStackTrace();
