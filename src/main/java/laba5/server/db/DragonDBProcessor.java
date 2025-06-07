@@ -230,7 +230,7 @@ public class DragonDBProcessor {
     public boolean update(Dragon dragon) {
         try {
             PreparedStatement stmt = dbManager.getPreparedStatement("UPDATE Dragon SET name = ?, id_coordinates = ?,"
-                    + " age = ?, description = ?, id_dragonType = ?, id_dragonCharacter = ?, id_killer = ?,"
+                    + " age = ?, description = ?, id_dragonType = ?, id_dragonCharacter = ?, id_killer = ?"
                     + " WHERE id = ?");
             stmt.setString(1, dragon.name());
             stmt.setLong(2, insert(dragon.coordinates()));

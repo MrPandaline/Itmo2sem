@@ -1,9 +1,9 @@
-package laba5.common;
+package laba5.client.handlers;
 
 import laba5.client.input.IIOManager;
+import laba5.common.ModelHandler;
 import laba5.common.dataExchanging.UnfinishedDragon;
 import laba5.common.model.Coordinates;
-import laba5.common.model.Dragon;
 import laba5.common.model.Location;
 import laba5.common.model.Person;
 import laba5.common.model.modelEnums.Color;
@@ -20,7 +20,7 @@ import java.util.Objects;
  * @author Homoursus
  * @version 1.0
  */
-public class ModelBuilder {
+public class ConsoleModelHandler implements ModelHandler {
 
     /** Ссылка на используемую реализацию менеджера ввода-вывода.*/
     private final IIOManager ioManager;
@@ -29,14 +29,15 @@ public class ModelBuilder {
      * Конструктор класса.
      * @param ioManager Используемый менеджер ввода-вывода
      * */
-    public ModelBuilder(IIOManager ioManager) {
+    public ConsoleModelHandler(IIOManager ioManager) {
         this.ioManager = ioManager;
     }
 
     boolean inQuiteMode = false;
 
     /** Метод, создающий объект класса Dragon по вводу пользователя.*/
-    public UnfinishedDragon buildDragon() {
+    @Override
+    public UnfinishedDragon handleDragon() {
 
         ioManager.printMessage("Введите имя дракона: ", inQuiteMode);
         String name = ioManager.getValidRawInput(Objects::nonNull);

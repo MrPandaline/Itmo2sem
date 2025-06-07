@@ -1,18 +1,16 @@
 package laba5.common.commands;
 
 import laba5.client.input.IIOManager;
+import laba5.common.ModelHandler;
 import laba5.common.dataExchanging.Response;
 import laba5.common.dataExchanging.ResponseClaster;
 import laba5.common.dataExchanging.UnfinishedDragon;
 import laba5.common.model.User;
-import laba5.server.Server;
-import laba5.common.ModelBuilder;
 import laba5.common.model.Dragon;
 import laba5.server.logic.CollectionManager;
 
 import java.time.ZonedDateTime;
 import java.util.ArrayDeque;
-import java.util.LinkedList;
 
 /**
  * Класс команды, реализующий обновление элемента коллекции по id.
@@ -20,7 +18,7 @@ import java.util.LinkedList;
  * @version 1.0
  */
 public class Update implements IServerSideCommand, IMultiLineCommand{
-    private final ArrayDeque<Object> additionalUserInput = new ArrayDeque<>();
+    private ArrayDeque<Object> additionalUserInput = new ArrayDeque<>();
     @Override
     public String getDescription() {
         return "Позволяет обновить значение элемента коллекции, id которого равен заданному \nТребует ввода id";
@@ -58,8 +56,16 @@ public class Update implements IServerSideCommand, IMultiLineCommand{
     }
 
     @Override
-    public void getAdditionalUserInput(IIOManager ioManager) {
-        UnfinishedDragon newDragon = new ModelBuilder(ioManager).buildDragon();
-        additionalUserInput.push(newDragon);
+    public void getAdditionalUserInput(IIOManager ioManager, ModelHandler handler) {
+        UnfinishedDragon dragon = null;
+        while (dragon == null) {
+            dragon = handler.handleDragon();
+        }
+        additionalUserInput.push(dragon);
+    }
+
+    @Override
+    public void setAdditionalUserInput(ArrayDeque<Object> additionalUnformaion) {
+        additionalUserInput = additionalUnformaion;
     }
 }

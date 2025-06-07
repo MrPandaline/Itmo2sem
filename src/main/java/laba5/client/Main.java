@@ -3,7 +3,7 @@ package laba5.client;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.stage.Stage;
-import laba5.client.gui.RegistrationWindow;
+import laba5.client.gui.MainWindow;
 import laba5.client.l18n.Messages;
 import laba5.common.commands.*;
 import laba5.client.input.ConsoleIOManager;
@@ -35,15 +35,19 @@ public class Main extends Application {
 
         IIOManager ioManager = new ConsoleIOManager(commandManager.getCommandNames());
         Client client = new Client(ioManager, historyCommands, commandManager);
-        /*
+
         new Thread(client::run).start();
 
-        Platform.runLater(() -> {
-            RegistrationWindow registrationWindow = new RegistrationWindow(client, locale);
-            registrationWindow.show();
+        MainWindow mainWindow = new MainWindow(client, locale);
+        mainWindow.start(primaryStage);
+
+        primaryStage.setOnCloseRequest(event -> {
+
+            client.turnOffClient();
+
+            Platform.exit();
+            System.exit(0);
         });
-        */
-        RegistrationWindow registrationWindow = new RegistrationWindow(client, locale);
-        registrationWindow.show();
+
     }
 }

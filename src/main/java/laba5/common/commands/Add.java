@@ -1,12 +1,11 @@
 package laba5.common.commands;
 
+import laba5.common.ModelHandler;
 import laba5.client.input.IIOManager;
 import laba5.common.dataExchanging.Response;
 import laba5.common.dataExchanging.ResponseClaster;
 import laba5.common.dataExchanging.UnfinishedDragon;
 import laba5.common.model.User;
-import laba5.server.Server;
-import laba5.common.ModelBuilder;
 import laba5.common.model.Dragon;
 import laba5.server.logic.CollectionManager;
 
@@ -20,7 +19,7 @@ import java.util.ArrayDeque;
  */
 public class Add implements IServerSideCommand, IMultiLineCommand {
 
-    private final ArrayDeque<Object> additionalUserInput = new ArrayDeque<>();
+    private ArrayDeque<Object> additionalUserInput = new ArrayDeque<>();
 
     @Override
     public String getDescription() {
@@ -37,11 +36,17 @@ public class Add implements IServerSideCommand, IMultiLineCommand {
     }
 
     @Override
-    public void getAdditionalUserInput(IIOManager ioManager) {
-        //TODO: надо исправить ModelBuilder (не собирать дракона а передать поля на сервер, на котором его будут собирать)
-        ModelBuilder handler = new ModelBuilder(ioManager);
-        UnfinishedDragon dragon = handler.buildDragon();
+    public void getAdditionalUserInput(IIOManager ioManager, ModelHandler handler) {
+        UnfinishedDragon dragon = null;
+        while (dragon == null) {
+            dragon = handler.handleDragon();
+        }
         additionalUserInput.push(dragon);
+    }
+
+    @Override
+    public void setAdditionalUserInput(ArrayDeque<Object> additionalUnformaion) {
+        additionalUserInput = additionalUnformaion;
     }
 
 }

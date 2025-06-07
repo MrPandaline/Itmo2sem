@@ -1,6 +1,7 @@
 package laba5.client;
 
 import laba5.common.Configuration;
+import laba5.client.handlers.ConsoleModelHandler;
 import laba5.common.commands.IClientSideCommand;
 import laba5.common.commands.ICommand;
 import laba5.common.commands.IMultiLineCommand;
@@ -30,7 +31,23 @@ public class Client {
         private User user;
         private Request userRequest;
 
-        public UserAuthorizer(){
+        public Request createUserRequest(String login, String passwd){
+            this.user = new User(login, passwd);
+            this.userRequest = new Request(null, user,null, false, null);
+            return userRequest;
+        }
+
+        public Response getUserResponse(){
+            try {
+                return communicateWithServer(userRequest);
+            } catch (IOException e){
+                ioManager.printError("Не удалось получить ответ от сервера! Перезапустите клиент позднее.\n");
+                isClientAlive = false;
+                return null;
+            }
+        }
+
+        public void authorize(){
             ioManager.printMessage("Введите свой логин: ", false);
 
             String username = null;
@@ -51,21 +68,6 @@ public class Client {
             createUserRequest(username, password);
         }
 
-        public Request createUserRequest(String login, String passwd){
-            this.user = new User(login, passwd);
-            userRequest = new Request(null, user,null, false, null);
-            return userRequest;
-        }
-
-        public Response getUserResponse(){
-            try {
-                return communicateWithServer(userRequest);
-            } catch (IOException e){
-                ioManager.printError("Не удалось получить ответ от сервера! Перезапустите клиент позднее.\n");
-                isClientAlive = false;
-                return null;
-            }
-        }
         public User getUser(){
             return user;
         }
@@ -102,7 +104,7 @@ public class Client {
     private static final int RECONNECT_DELAY_MS = 5000;
     private static final int SOCKET_TIMEOUT_MS = 2000;
 
-    public UserAuthorizer userauth = new UserAuthorizer();
+    public UserAuthorizer userauth;
 
     /**
      * Конструктор клиентов. Инициализирует всех его менеджеров.
@@ -112,6 +114,7 @@ public class Client {
     public Client(IIOManager ioManager, String commandsFileName,
                 CommandManager commandManager) {
         this.ioManager = ioManager;
+        this.userauth = new UserAuthorizer();
         this.lastUsedCommands = new CommandsListStoragingManager(commandsFileName).readFromStorage(ioManager);
         this.commandsFileName = commandsFileName;
         this.commandManager = commandManager;
@@ -182,6 +185,7 @@ public class Client {
         try {
             String userInput;
             boolean isAutharized = false;
+            userauth.authorize();
             try {
                 while (!isAutharized && isClientAlive) {
                     Response userResp = userauth.getUserResponse();
@@ -193,7 +197,7 @@ public class Client {
                         userauth.getUser().id(userResp.statusCode());
                         isAutharized = true;
                     } else {
-                        userauth = new UserAuthorizer();
+                        userauth.authorize();
                     }
                 }
             } catch (NullPointerException ignored) {}
@@ -217,7 +221,8 @@ public class Client {
                     boolean haveAdditionalInf = false;
 
                     if (command instanceof IMultiLineCommand) {
-                        ((IMultiLineCommand) command).getAdditionalUserInput(ioManager);
+                        ConsoleModelHandler handler = new ConsoleModelHandler(ioManager);
+                        ((IMultiLineCommand) command).getAdditionalUserInput(ioManager, handler);
                         haveAdditionalInf = true;
                     }
                     if (command instanceof IClientSideCommand) {
