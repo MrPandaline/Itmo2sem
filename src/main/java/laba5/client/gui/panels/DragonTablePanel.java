@@ -1,14 +1,23 @@
 package laba5.client.gui.panels;
 
+import javafx.application.Platform;
+import javafx.beans.property.SimpleLongProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.control.skin.TableColumnHeader;
+import javafx.scene.control.skin.TableViewSkin;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import laba5.client.Client;
 import laba5.client.gui.DragonEditingDialog;
+import laba5.client.gui.Refreshable;
 import laba5.client.gui.logic.DragonFilter;
+import laba5.client.l18n.Messages;
 import laba5.common.commands.ICommand;
 import laba5.common.commands.IMultiLineCommand;
 import laba5.common.commands.IServerSideCommand;
@@ -22,16 +31,17 @@ import laba5.common.model.Person;
 import laba5.common.model.modelEnums.DragonType;
 
 import java.io.IOException;
+import java.text.NumberFormat;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-public class DragonTablePanel extends BorderPane {
 
+public class DragonTablePanel extends BorderPane implements Refreshable {
     private final Client client;
     private final ObservableList<Dragon> dragonData = FXCollections.observableArrayList();
     private final DragonFilter dragonFilter = new DragonFilter();
-
     private TableView<Dragon> tableView = new TableView<>();
-
     private final TextField nameFilter = new TextField();
     private final TextField ageFilter = new TextField();
     private final TextField coordsFilter = new TextField();
@@ -40,19 +50,18 @@ public class DragonTablePanel extends BorderPane {
     private final TextField characterFilter = new TextField();
     private final TextField killerFilter = new TextField();
     private final TextField locationFilter = new TextField();
-
     private HBox filterBox;
     private final Map<String, HBox> filterControls = new HashMap<>();
+    private Locale locale;
 
     public DragonTablePanel(Client client, Locale locale) {
         this.client = client;
+        this.locale = locale;
         refreshData(client);
-
         createFilterRow();
         setupMouseHandlers();
         setupFilters();
         createTable();
-
         tableView.setItems(FXCollections.observableArrayList(dragonFilter.apply(dragonData)));
         this.setCenter(tableView);
     }
@@ -60,12 +69,10 @@ public class DragonTablePanel extends BorderPane {
     public void refreshData(Client client) {
         try {
             ICommand cmd = client.getCommandManager().getCommandByName("show");
-            Request request = new Request((IServerSideCommand) cmd, client.userauth.getUser(), new String[]{"20"}, false, null);
+            Request request = new Request((IServerSideCommand) cmd, client.userauth.getUser(), new String[]{"200"}, false, null);
             Response resp = client.communicateWithServer(request);
-
             dragonData.clear();
             dragonData.addAll(resp.responseClaster().objects());
-
             applyFilters();
         } catch (CommandNotFound | IOException e) {
             e.printStackTrace();
@@ -90,7 +97,6 @@ public class DragonTablePanel extends BorderPane {
                 double clickX = event.getX();
                 int colIndex = -1;
                 double totalWidth = 0;
-
                 for (int i = 0; i < tableView.getColumns().size(); i++) {
                     TableColumn<Dragon, ?> col = tableView.getColumns().get(i);
                     totalWidth += col.getWidth();
@@ -99,12 +105,12 @@ public class DragonTablePanel extends BorderPane {
                         break;
                     }
                 }
-
                 if (colIndex != -1) {
                     TableColumn<Dragon, ?> clickedCol = tableView.getColumns().get(colIndex);
-                    String colName = clickedCol.getText();
-
-                    showFilterForColumn(colName);
+                    String colKey = clickedCol.getId(); // Получаем ID столбца как ключ локализации
+                    if (colKey != null) {
+                        showFilterForColumn(colKey); // Показываем фильтр для этого столбца
+                    }
                 }
             }
         });
@@ -113,40 +119,37 @@ public class DragonTablePanel extends BorderPane {
     private void createFilterRow() {
         filterBox = new HBox(5);
         filterBox.setSpacing(10);
+        filterBox.setStyle("-fx-background-color: #f0f0f0; -fx-padding: 5px;"); // Добавьте стиль для видимости
         this.setTop(filterBox);
     }
 
     private void showFilterForColumn(String columnName) {
         TextField textField;
         switch (columnName) {
-            case "Name" -> textField = nameFilter;
-            case "Age" -> textField = ageFilter;
-            case "Coordinates" -> textField = coordsFilter;
-            case "Creation Date" -> textField = dateFilter;
-            case "Type" -> textField = typeFilter;
-            case "Character" -> textField = characterFilter;
-            case "Killer" -> textField = killerFilter;
-            case "Killer Location" -> textField = locationFilter;
+            case "dragon.table.header.name" -> textField = nameFilter;
+            case "dragon.table.header.age" -> textField = ageFilter;
+            case "dragon.table.header.coordinates" -> textField = coordsFilter;
+            case "dragon.table.header.creationDate" -> textField = dateFilter;
+            case "dragon.table.header.type" -> textField = typeFilter;
+            case "dragon.table.header.character" -> textField = characterFilter;
+            case "dragon.table.header.killer" -> textField = killerFilter;
+            case "dragon.table.header.killerLocation" -> textField = locationFilter;
             default -> {
                 return;
             }
         }
 
-        HBox control = filterControls.computeIfAbsent(columnName, k -> getFilterControl(k, textField));
-
+        HBox control = filterControls.computeIfAbsent(columnName, k -> getFilterControl(getMessage(k), textField));
         if (!filterBox.getChildren().contains(control)) {
             filterBox.getChildren().add(control);
         }
-
         textField.requestFocus();
-
         textField.textProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal == null || newVal.isBlank()) {
                 filterBox.getChildren().remove(control);
             } else if (!filterBox.getChildren().contains(control)) {
                 filterBox.getChildren().add(control);
             }
-
             applyFilters();
         });
     }
@@ -175,28 +178,25 @@ public class DragonTablePanel extends BorderPane {
         tableView.setItems(FXCollections.observableArrayList(dragonFilter.apply(dragonData)));
     }
 
-
     private HBox getFilterControl(String columnName, TextField textField) {
         Label label = new Label(columnName + ":");
         textField.setPromptText("Filter");
-
         HBox box = new HBox(5);
         box.getChildren().addAll(label, textField);
-
         return box;
     }
 
     private Comparator<Dragon> getComparatorForColumn(String columnName) {
         return switch (columnName) {
-            case "Name" -> Comparator.comparing(Dragon::name);
-            case "Age" -> Comparator.comparingLong(Dragon::age);
-            case "Coordinates" -> Comparator.comparing(d -> d.coordinates() != null ?
+            case "dragon.table.header.name" -> Comparator.comparing(Dragon::name);
+            case "dragon.table.header.age" -> Comparator.comparingLong(Dragon::age);
+            case "dragon.table.header.coordinates" -> Comparator.comparing(d -> d.coordinates() != null ?
                     "X=" + d.coordinates().x() + ", Y=" + d.coordinates().y() : "");
-            case "Creation Date" -> Comparator.comparing(d -> d.creationDate().toString());
-            case "Type" -> Comparator.comparing(Dragon::dragonType);
-            case "Character" -> Comparator.comparing(Dragon::dragonCharacter);
-            case "Killer" -> Comparator.comparing(d -> d.killer() != null ? d.killer().name() : "");
-            case "Killer Location" -> Comparator.comparing(d -> {
+            case "dragon.table.header.creationDate" -> Comparator.comparing(d -> d.creationDate().toString());
+            case "dragon.table.header.type" -> Comparator.comparing(Dragon::dragonType);
+            case "dragon.table.header.character" -> Comparator.comparing(Dragon::dragonCharacter);
+            case "dragon.table.header.killer" -> Comparator.comparing(d -> d.killer() != null ? d.killer().name() : "");
+            case "dragon.table.header.killerLocation" -> Comparator.comparing(d -> {
                 Person killer = d.killer();
                 return killer != null && killer.location() != null ?
                         "X=" + killer.location().x() + ", Y=" + killer.location().y() + ", Z=" + killer.location().z() : "";
@@ -206,51 +206,94 @@ public class DragonTablePanel extends BorderPane {
     }
 
     private void createTable() {
-        TableColumn<Dragon, String> nameCol = new TableColumn<>("Name");
+        TableColumn<Dragon, String> nameCol = new TableColumn<>(getMessage("dragon.table.header.name"));
+        nameCol.setId("dragon.table.header.name");
         nameCol.setCellValueFactory(cellData ->
-                new javafx.beans.property.SimpleStringProperty(cellData.getValue().name()));
+                new SimpleStringProperty(cellData.getValue().name()));
 
-        TableColumn<Dragon, Number> ageCol = new TableColumn<>("Age");
+        TableColumn<Dragon, Number> ageCol = new TableColumn<>(getMessage("dragon.table.header.age"));
+        ageCol.setId("dragon.table.header.age");
         ageCol.setCellValueFactory(cellData ->
-                new javafx.beans.property.SimpleLongProperty(cellData.getValue().age()));
+                new SimpleLongProperty(cellData.getValue().age()));
+        ageCol.setCellFactory(col -> new TableCell<>() {
+            @Override
+            protected void updateItem(Number item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(NumberFormat.getInstance(locale).format(item));
+                }
+            }
+        });
 
-        TableColumn<Dragon, String> coordsCol = new TableColumn<>("Coordinates");
+        TableColumn<Dragon, String> coordsCol = new TableColumn<>(getMessage("dragon.table.header.coordinates"));
+        coordsCol.setId("dragon.table.header.coordinates");
         coordsCol.setCellValueFactory(cellData -> {
             var coords = cellData.getValue().coordinates();
-            return new javafx.beans.property.SimpleStringProperty(
-                    coords == null ? "—" : "X=" + coords.x() + ", Y=" + coords.y()
+            return new SimpleStringProperty(
+                    coords == null ? getMessage("dragon.table.emptyValue") :
+                            "X=" + coords.x() + ", Y=" + coords.y()
             );
         });
 
-        TableColumn<Dragon, String> dateCol = new TableColumn<>("Creation Date");
-        dateCol.setCellValueFactory(cellData ->
-                new javafx.beans.property.SimpleStringProperty(cellData.getValue().creationDate().toString()));
+        TableColumn<Dragon, String> dateCol = new TableColumn<>(getMessage("dragon.table.header.creationDate"));
+        dateCol.setId("dragon.table.header.creationDate");
+        DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDate(java.time.format.FormatStyle.LONG)
+                .withLocale(locale);
+        dateCol.setCellValueFactory(cellData -> {
+            ZonedDateTime creationDate = cellData.getValue().creationDate();
+            if (creationDate != null) {
+                return new SimpleStringProperty(creationDate.format(formatter));
+            } else {
+                return new SimpleStringProperty(getMessage("dragon.table.emptyValue"));
+            }
+        });
 
-        TableColumn<Dragon, DragonType> typeCol = new TableColumn<>("Type");
+        TableColumn<Dragon, DragonType> typeCol = new TableColumn<>(getMessage("dragon.table.header.type"));
+        typeCol.setId("dragon.table.header.type");
         typeCol.setCellValueFactory(cellData ->
-                new javafx.beans.property.SimpleObjectProperty<>(cellData.getValue().dragonType()));
+                new SimpleObjectProperty<>(cellData.getValue().dragonType()));
+        typeCol.setCellFactory(col -> new TableCell<>() {
+            @Override
+            protected void updateItem(DragonType item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(getMessage("dragon.type." + item.toString().toLowerCase()));
+                }
+            }
+        });
 
-        TableColumn<Dragon, String> characterCol = new TableColumn<>("Character");
+        TableColumn<Dragon, String> characterCol = new TableColumn<>(getMessage("dragon.table.header.character"));
+        characterCol.setId("dragon.table.header.character");
         characterCol.setCellValueFactory(cellData ->
-                new javafx.beans.property.SimpleStringProperty(cellData.getValue().dragonCharacter().toString()));
+                new SimpleStringProperty(
+                        getMessage("dragon.character." + cellData.getValue().dragonCharacter().toString().toLowerCase())));
 
-        TableColumn<Dragon, String> killerCol = new TableColumn<>("Killer");
+        TableColumn<Dragon, String> killerCol = new TableColumn<>(getMessage("dragon.table.header.killer"));
+        killerCol.setId("dragon.table.header.killer");
         killerCol.setCellValueFactory(cellData -> {
             Person killer = cellData.getValue().killer();
-            return new javafx.beans.property.SimpleStringProperty(
-                    killer == null ? "—" : killer.name() + ", height: " + killer.height()
+            return new SimpleStringProperty(
+                    killer == null ? getMessage("dragon.table.emptyValue") :
+                            killer.name() + ", height: " + NumberFormat.getNumberInstance(locale).format(killer.height())
             );
         });
 
-        TableColumn<Dragon, String> locationCol = new TableColumn<>("Killer Location");
+        TableColumn<Dragon, String> locationCol = new TableColumn<>(getMessage("dragon.table.header.killerLocation"));
+        locationCol.setId("dragon.table.header.killerLocation");
         locationCol.setCellValueFactory(cellData -> {
             Person killer = cellData.getValue().killer();
             if (killer == null || killer.location() == null) {
-                return new javafx.beans.property.SimpleStringProperty("—");
+                return new SimpleStringProperty(getMessage("dragon.table.emptyValue"));
             }
             Location loc = killer.location();
-            return new javafx.beans.property.SimpleStringProperty(
-                    "X=" + loc.x() + ", Y=" + loc.y() + ", Z=" + loc.z()
+            return new SimpleStringProperty(
+                    "X=" + NumberFormat.getNumberInstance(locale).format(loc.x()) +
+                            ", Y=" + NumberFormat.getNumberInstance(locale).format(loc.y()) +
+                            ", Z=" + NumberFormat.getNumberInstance(locale).format(loc.z())
             );
         });
 
@@ -258,26 +301,21 @@ public class DragonTablePanel extends BorderPane {
     }
 
     private void editAndSaveDragon(Dragon dragon) {
-        UnfinishedDragon updatedDragon = DragonEditingDialog.showEditingDialog(dragon, (Stage) getScene().getWindow());
-
+        UnfinishedDragon updatedDragon = DragonEditingDialog.showEditingDialog(dragon, (Stage) getScene().getWindow(), locale);
         if (updatedDragon != null) {
             try {
                 ICommand command = client.getCommandManager().getCommandByName("update");
                 ArrayDeque<Object> newDragonDeque = new ArrayDeque<>();
                 newDragonDeque.push(updatedDragon);
-
                 ((IMultiLineCommand) command).setAdditionalUserInput(newDragonDeque);
-
                 Request req = new Request((IServerSideCommand) command, client.userauth.getUser(),
                         new String[]{String.valueOf(dragon.id())}, true, newDragonDeque);
-
                 Response resp = client.communicateWithServer(req);
-
                 if (resp.statusCode() == 200) {
-                    showAlert("Success", "Dragon updated successfully.");
+                    showAlert("Success", getMessage("dragon.save.success"));
                     refreshData(client);
                 } else {
-                    showAlert("Error", "Failed to update dragon: " + resp.responseClaster().message());
+                    showAlert("Error", getMessage("dragon.save.error") + resp.responseClaster().message());
                 }
             } catch (CommandNotFound | IOException e) {
                 throw new RuntimeException(e);
@@ -287,9 +325,24 @@ public class DragonTablePanel extends BorderPane {
 
     private void showAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
+        alert.setTitle(getMessage("dragon.alert.title"));
+        alert.setHeaderText(title);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+
+    private String getMessage(String key) {
+        return (String) Messages.getBundle().handleGetObject(key);
+    }
+
+    @Override
+    public void refreshWithNewLocale(Locale newLocale) {
+        Messages.setLocale(newLocale);
+        this.locale = newLocale;
+        getChildren().clear();
+        tableView.getColumns().clear();
+        createTable();
+        setupFilters();
+        this.setCenter(tableView);
     }
 }

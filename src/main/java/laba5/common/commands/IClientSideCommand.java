@@ -10,5 +10,5 @@ public interface IClientSideCommand extends ICommand{
      * @see Client
      * @param args дополнительные аргументы, введённые пользователем
      */
-    void execute(Client client, String[] args);
+    String execute(Client client, String[] args);
 }

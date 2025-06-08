@@ -6,6 +6,7 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.image.Image;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -20,6 +21,8 @@ import java.util.List;
 import javafx.stage.Stage;
 import laba5.client.Client;
 import laba5.client.gui.DragonEditingDialog;
+import laba5.client.gui.Refreshable;
+import laba5.client.l18n.Messages;
 import laba5.common.commands.IMultiLineCommand;
 import laba5.common.dataExchanging.Request;
 import laba5.common.dataExchanging.Response;
@@ -27,15 +30,18 @@ import laba5.common.commands.ICommand;
 import laba5.common.commands.IServerSideCommand;
 import laba5.common.dataExchanging.UnfinishedDragon;
 import laba5.common.exceptions.CommandNotFound;
+import laba5.common.genetics.DragonTypeResolver;
+import laba5.common.genetics.Genome;
+import laba5.common.genetics.PhenotypeResolver;
 import laba5.common.model.Coordinates;
 import laba5.common.model.Dragon;
 import javafx.util.Duration;
 
-public class DragonVisualizerPane extends Pane {
+public class DragonVisualizerPane extends Pane implements Refreshable {
     private final Canvas canvas = new Canvas(800, 600);
     private final Client client;
-    private static final double MIN_SIZE = 10;
-    private static final double MAX_SIZE = 50;
+    private static final double MIN_SIZE = 50;
+    private static final double MAX_SIZE = 100;
     private static final double SCALE_STEP = 1.1;
     private static final double MIN_SCALE = 0.3;
     private static final double MAX_SCALE = 3.0;
@@ -47,8 +53,31 @@ public class DragonVisualizerPane extends Pane {
     private final List<AnimatedDragon> animatedDragons = new ArrayList<>();
     private final List<Dragon> fullyAnimatedDragons = new ArrayList<>();
 
-    public DragonVisualizerPane(Client client) {
+
+    private static final String BASE_IMAGE_PATH = "file:resources/dragonImages/";
+
+    private PhenotypeResolver wingResolver;
+    private PhenotypeResolver eyeResolver;
+    private PhenotypeResolver hornResolver;
+    private PhenotypeResolver patternResolver;
+
+    private DragonTypeResolver typeResolver;
+
+    private Button resetDataButton;
+
+    private Locale locale;
+
+    public DragonVisualizerPane(Client client, Locale locale) {
         this.client = client;
+
+        this.locale = locale;
+
+        this.wingResolver = new PhenotypeResolver(BASE_IMAGE_PATH + "wings/");
+        this.eyeResolver = new PhenotypeResolver(BASE_IMAGE_PATH + "eyes/");
+        this.hornResolver = new PhenotypeResolver(BASE_IMAGE_PATH + "horns/");
+        this.patternResolver = new PhenotypeResolver(BASE_IMAGE_PATH + "pattern/");
+        this.typeResolver = new DragonTypeResolver(BASE_IMAGE_PATH + "type/");
+
         canvas.getTransforms().add(scaleTransform);
         Pane canvasContainer = new Pane(canvas);
         canvasContainer.setMinSize(Pane.USE_PREF_SIZE, Pane.USE_PREF_SIZE);
@@ -63,7 +92,7 @@ public class DragonVisualizerPane extends Pane {
         canvas.heightProperty().addListener((obs, oldVal, newVal) -> redrawCanvas());
         canvas.setOnScroll(this::handleScrollEvent);
 
-        Button resetDataButton = new Button("Reset Condition");
+        Button resetDataButton = new Button(getMessage("dragon.visualizer.button.reset"));
         resetDataButton.setOnAction(e -> resetCondition());
 
         HBox controlPanel = new HBox(10, resetDataButton);
@@ -79,14 +108,14 @@ public class DragonVisualizerPane extends Pane {
     public void updateFromServer() {
         try {
             ICommand cmd = client.getCommandManager().getCommandByName("show");
-            Request request = new Request((IServerSideCommand) cmd, client.userauth.getUser(), new String[]{"20"}, false, null);
+            Request request = new Request((IServerSideCommand) cmd, client.userauth.getUser(), new String[]{"200"}, false, null);
             Response resp = client.communicateWithServer(request);
             List<Dragon> dragonData = new ArrayList<>();
             dragonData.addAll(List.of(resp.responseClaster().objects()));
             updateCanvas(dragonData);
         } catch (Exception e) {
             e.printStackTrace();
-            showAlert("Error", "Error fetching or parsing dragon data.");
+            showAlert("alert.title.error", "dragon.visualizer.error.fetch");
         }
     }
 
@@ -110,26 +139,25 @@ public class DragonVisualizerPane extends Pane {
     }
 
     private void animateNewDragon(Dragon dragon) {
+        if (dragon == null || dragon.coordinates() == null) return;
+
         SimpleDoubleProperty size = new SimpleDoubleProperty(1.0); // начальный размер
         double targetSize = calculateSize(dragon.age());
 
-        AnimatedDragon animatedDragon = new AnimatedDragon(dragon, size);
+        KeyValue kv = new KeyValue(size, targetSize, Interpolator.EASE_BOTH);
+        KeyFrame kf = new KeyFrame(Duration.millis(600), kv);
+
+        Timeline timeline = new Timeline(kf);
+        AnimatedDragon animatedDragon = new AnimatedDragon(dragon, size, timeline);
         animatedDragons.add(animatedDragon);
 
-        KeyValue kv = new KeyValue(size, targetSize, Interpolator.EASE_BOTH);
-        KeyFrame kf = new KeyFrame(Duration.millis(400), kv);
-        Timeline timeline = new Timeline(kf);
-
         timeline.setOnFinished(event -> {
-            animatedDragons.remove(animatedDragon);
             fullyAnimatedDragons.add(dragon);
+            animatedDragons.remove(animatedDragon);
             redrawCanvas();
         });
 
-        timeline.currentTimeProperty().addListener((obs, oldTime, newTime) -> {
-            redrawCanvas();
-        });
-
+        timeline.currentTimeProperty().addListener((obs, oldTime, newTime) -> redrawCanvas());
         timeline.play();
     }
 
@@ -141,7 +169,7 @@ public class DragonVisualizerPane extends Pane {
         double canvasWidth = canvas.getWidth();
         double canvasHeight = canvas.getHeight();
 
-        // Отрисовка анимируемых драконов
+        // Отрисовка анимируемых драконов (кружки растут)
         for (AnimatedDragon animated : animatedDragons) {
             Dragon dragon = animated.dragon;
             Coordinates coords = dragon.coordinates();
@@ -155,7 +183,6 @@ public class DragonVisualizerPane extends Pane {
             gc.fillOval(x - currentSize / 2, y - currentSize / 2, currentSize, currentSize);
         }
 
-        // Отрисовка полностью анимированных драконов с именами
         for (Dragon dragon : fullyAnimatedDragons) {
             Coordinates coords = dragon.coordinates();
             long userID = dragon.creatorId();
@@ -164,16 +191,43 @@ public class DragonVisualizerPane extends Pane {
             double size = calculateSize(dragon.age());
             Color color = getUserColor(userID);
 
+            // Рисуем окружность
             gc.setFill(color);
             gc.fillOval(x - size / 2, y - size / 2, size, size);
 
+            // Рисуем изображение дракона
+            drawDragonImage(gc, dragon, x, y, size);
+
+            // Рисуем имя
             gc.save();
-            gc.setTransform(1, 0, 0, 1, 0, 0); // отключаем масштабирование текста
+            gc.setTransform(1, 0, 0, 1, 0, 0);
             gc.setFill(Color.BLACK);
             gc.setTextAlign(TextAlignment.CENTER);
             double textOffset = size / 2 + 10;
             gc.fillText(dragon.name(), x, y - textOffset);
             gc.restore();
+        }
+    }
+
+    private void drawDragonImage(GraphicsContext gc, Dragon dragon, double x, double y, double size) {
+        Genome genome = dragon.genome();
+
+        Image wingImage = wingResolver.resolve(genome.getWingSizeGene());
+        Image eyeImage = eyeResolver.resolve(genome.getEyeGene());
+        Image hornImage = hornResolver.resolve(genome.getHornGene());
+        Image patternImage = patternResolver.resolve(genome.getPatternGene());
+        Image typeImage = typeResolver.resolve(dragon.dragonType());
+
+        drawImage(gc, wingImage, x, y, size);
+        drawImage(gc, eyeImage, x, y, size);
+        drawImage(gc, hornImage, x, y, size);
+        drawImage(gc, patternImage, x, y, size);
+        drawImage(gc, typeImage, x, y, size);
+    }
+
+    private void drawImage(GraphicsContext gc, Image image, double x, double y, double size) {
+        if (image != null && !image.isError()) {
+            gc.drawImage(image, x - size / 2, y - size / 2, size, size);
         }
     }
 
@@ -242,7 +296,7 @@ public class DragonVisualizerPane extends Pane {
                 double size = calculateSize(age);
                 double radius = size / 2;
                 if (dx * dx + dy * dy <= radius * radius) {
-                    UnfinishedDragon updatedDragon = DragonEditingDialog.showEditingDialog(dragon, (Stage) getScene().getWindow());
+                    UnfinishedDragon updatedDragon = DragonEditingDialog.showEditingDialog(dragon, (Stage) getScene().getWindow(), locale);
                     if (updatedDragon != null) {
                         try {
                             ICommand command = client.getCommandManager().getCommandByName("update");
@@ -255,7 +309,7 @@ public class DragonVisualizerPane extends Pane {
                                 showAlert("Success", "Dragon updated successfully.");
                                 updateFromServer();
                             } else {
-                                showAlert("Error", "Failed to update dragon: " + resp.responseClaster().message());
+                                showAlert("alert.title.error", "dragon.visualizer.error.parsing");
                             }
                         } catch (CommandNotFound | IOException e) {
                             throw new RuntimeException(e);
@@ -275,15 +329,27 @@ public class DragonVisualizerPane extends Pane {
         alert.showAndWait();
     }
 
-    // Вспомогательный класс для хранения дракона и его состояния анимации
     private static class AnimatedDragon {
         Dragon dragon;
-        SimpleDoubleProperty size;
         Timeline timeline;
+        SimpleDoubleProperty size;
 
-        AnimatedDragon(Dragon dragon, SimpleDoubleProperty size) {
+        AnimatedDragon(Dragon dragon, SimpleDoubleProperty size, Timeline timeline) {
             this.dragon = dragon;
             this.size = size;
+            this.timeline = timeline;
         }
+    }
+    private String getMessage(String key) {
+        return (String) Messages.getBundle().handleGetObject(key);
+    }
+
+    @Override
+    public void refreshWithNewLocale(Locale newLocale) {
+        Messages.setLocale(newLocale);
+        if (resetDataButton != null) {
+            resetDataButton.setText(getMessage("dragon.visualizer.button.reset"));
+        }
+
     }
 }

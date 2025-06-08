@@ -1,5 +1,6 @@
 package laba5.common.dataExchanging;
 
+import laba5.common.genetics.Genome;
 import laba5.common.model.Coordinates;
 import laba5.common.model.Dragon;
 import laba5.common.model.Person;
@@ -10,7 +11,8 @@ import java.io.Serializable;
 import java.time.ZonedDateTime;
 
 public record UnfinishedDragon(String name, Coordinates coords, long age, String description,
-                               DragonType dragonType, DragonCharacter dragonCharacter, Person killer) implements Serializable {
+                               DragonType dragonType, DragonCharacter dragonCharacter, Person killer, Genome genome) implements Serializable {
+
 
     public Dragon buildDragon(ZonedDateTime creationTime, long creatorId) {
         return new Dragon(name, coords, age, description, dragonType, dragonCharacter,

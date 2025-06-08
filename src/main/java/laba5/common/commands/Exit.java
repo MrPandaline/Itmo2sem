@@ -15,7 +15,8 @@ public class Exit implements IClientSideCommand{
     }
 
     @Override
-    public void execute(Client client, String[] args) {
+    public String execute(Client client, String[] args) {
         client.turnOffClient();
+        return null;
     }
 }

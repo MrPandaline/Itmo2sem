@@ -1,5 +1,6 @@
 package laba5.common.model;
 
+import laba5.common.genetics.Genome;
 import laba5.common.model.modelEnums.DragonCharacter;
 import laba5.common.model.modelEnums.DragonType;
 
@@ -63,6 +64,8 @@ public class Dragon extends AbstractModel implements Comparable<Dragon>, Seriali
     private Person killer; //Поле может быть null
 
     private long creatorId;
+
+    private Genome genome;
     
     { 
         this.id = idGenerator++;
@@ -152,6 +155,18 @@ public class Dragon extends AbstractModel implements Comparable<Dragon>, Seriali
     /** Устанавливает значения, начиная с которого будут генерироваться id элементов коллекции*/
     public static void setIdGenerator(long idGenerator) {
         Dragon.idGenerator = idGenerator;
+    }
+
+    public boolean isAlive() {
+        return killer == null;
+    }
+
+    public void genome(Genome genome) {
+        this.genome = genome;
+    }
+
+    public Genome genome() {
+        return genome;
     }
 
     @Override

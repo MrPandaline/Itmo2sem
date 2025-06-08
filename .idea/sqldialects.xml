@@ -2,5 +2,7 @@
 <project version="4">
   <component name="SqlDialectMappings">
     <file url="file://$PROJECT_DIR$/src/main/java/laba5/server/db/DragonDBProcessor.java" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/src/main/java/laba5/server/db/DragonGenomeDBProcessor.java" dialect="GenericSQL" />
+    <file url="PROJECT" dialect="PostgreSQL" />
   </component>
 </project>

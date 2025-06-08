@@ -8,15 +8,19 @@ public abstract class Messages extends ListResourceBundle {
 
     public static void setLocale(Locale locale) {
         currentLocale = locale;
-        instance = null; // Сбросить кэш
+        instance = null;
     }
 
     public static Messages getBundle() {
         if (instance == null) {
             if (currentLocale.getLanguage().equals(new Locale("ru").getLanguage())) {
                 instance = new Messages_ru();
+            } else if (currentLocale.getLanguage().equals(new Locale("fr").getLanguage())) {
+                instance = new Messages_fr();
+            } else if (currentLocale.getLanguage().equals(new Locale("no").getLanguage())) {
+                instance = new Messages_no();
             } else {
-                instance = new Messages_en_ZA();
+                instance = new Messages_en();
             }
         }
         return instance;

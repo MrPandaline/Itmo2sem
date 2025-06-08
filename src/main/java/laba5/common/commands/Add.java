@@ -31,6 +31,7 @@ public class Add implements IServerSideCommand, IMultiLineCommand {
         UnfinishedDragon data = (UnfinishedDragon) additionalUserInput.remove();
         ZonedDateTime time = ZonedDateTime.now();
         Dragon drag = data.buildDragon(time, user.id());
+        drag.genome(data.genome());
         CollectionManager.getInstance().add(drag, user);
         return new Response(200, new ResponseClaster(outInQuiteMode, "Элемент добавлен в коллекцию!"));
     }

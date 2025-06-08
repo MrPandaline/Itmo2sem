@@ -65,7 +65,7 @@ public class ConsoleModelHandler implements ModelHandler {
             killer = null;
         }
         ioManager.printMessage("Дракон успешно добавлен в коллекцию!\n", true);
-        return new UnfinishedDragon(name, coordinates, age, description, dragonType, dragonCharacter, killer);
+        return new UnfinishedDragon(name, coordinates, age, description, dragonType, dragonCharacter, killer,null);
     }
 
     /** Метод, создающий объект класса Location по вводу пользователя.*/

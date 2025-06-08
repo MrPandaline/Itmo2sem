@@ -90,6 +90,7 @@ public class DBManager {
                 stmt.executeUpdate("CREATE TABLE IF NOT EXISTS Coordinates(id serial PRIMARY KEY, x FLOAT NOT NULL, y INTEGER NOT NULL);");
                 stmt.executeUpdate("CREATE TABLE IF NOT EXISTS Person(id serial PRIMARY KEY, name text NOT NULL, height INTEGER NOT NULL, id_eyeColor INTEGER REFERENCES Color, id_hairColor INTEGER REFERENCES Color, id_country INTEGER REFERENCES Country, id_location INTEGER REFERENCES Location);");
                 stmt.executeUpdate("CREATE TABLE IF NOT EXISTS Dragon(id SERIAL PRIMARY KEY, name text NOT NULL, id_coordinates INTEGER REFERENCES Coordinates NOT NULL, creationDate timestamp NOT NULL, age BIGINT NOT NULL, description text, id_dragonType INTEGER REFERENCES DragonType, id_dragonCharacter INTEGER REFERENCES DragonCharacter, id_killer INTEGER REFERENCES Person, id_user INTEGER REFERENCES DragonUser);");
+                stmt.executeUpdate("CREATE TABLE IF NOT EXISTS DragonGenomes(id_dragon BIGINT PRIMARY KEY REFERENCES Dragon(id), wingSizeGene VARCHAR(2) NOT NULL, eyeGene VARCHAR(2) NOT NULL, hornGene VARCHAR(2), patternGene VARCHAR(2))");
                 stmt.close();
 
 

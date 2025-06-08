@@ -16,10 +16,15 @@ public class History implements IClientSideCommand{
     }
 
     @Override
-    public void execute(Client client, String[] args) {
+    public String execute(Client client, String[] args) {
         ArrayList<String> history = client.getLastUsedCommands();
+
+        StringBuilder sb = new StringBuilder();
+
         for (int i = Math.max(history.size() - 15, 0); i < history.size(); i++) {
-            client.getIoManager().printMessage("-" + history.get(i) + "\n", outInQuiteMode);
+            sb.append("-").append(history.get(i)).append("\n");
         }
+
+        return sb.toString();
     }
 }

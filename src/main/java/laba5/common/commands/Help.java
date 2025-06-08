@@ -14,17 +14,22 @@ public class Help implements IClientSideCommand{
         return "Вывести справку по доступным командам";
     }
     @Override
-    public void execute(Client client, String[] args) {
+    public String execute(Client client, String[] args) {
+
+        StringBuilder sb = new StringBuilder();
+
         IIOManager ioManager = client.getIoManager();
         ICommand[] commands = client.getCommandManager().getCommands();
         final String SEPARATOR = "-----------------------------------------------------------------------\n";
         // Можно переписать с помощью forEach, но надо ли?
         for (ICommand command : commands) {
-            ioManager.printMessage(SEPARATOR, outInQuiteMode);
-            ioManager.printMessage(command.getClass().getSimpleName().replaceAll("([a-z])([A-Z])",
-                    "$1_$2").toLowerCase() + "\n", outInQuiteMode);
-            ioManager.printMessage(command.getDescription() + "\n", outInQuiteMode);
+            sb.append(SEPARATOR);
+            sb.append(command.getClass().getSimpleName().replaceAll("([a-z])([A-Z])",
+                    "$1_$2").toLowerCase()).append("\n");
+            sb.append(command.getDescription()).append("\n");
         }
         ioManager.printMessage(SEPARATOR, outInQuiteMode);
+
+        return sb.toString();
     }
 }

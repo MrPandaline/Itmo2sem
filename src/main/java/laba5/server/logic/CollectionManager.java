@@ -1,8 +1,11 @@
 package laba5.server.logic;
 
 import laba5.common.Configuration;
+import laba5.common.genetics.Genome;
+import laba5.common.genetics.GenomeGenerator;
 import laba5.common.model.Dragon;
 import laba5.common.model.User;
+import laba5.server.db.DragonGenomeDBProcessor;
 
 import java.sql.SQLException;
 import java.time.ZonedDateTime;
@@ -27,6 +30,7 @@ public class CollectionManager {
     }
 
     private final DBManager dbManager;
+    private final DragonGenomeDBProcessor dgDBp;
 
     private final HashMap<Dragon, User> dragonUserMap = new HashMap<>();
 
@@ -39,6 +43,7 @@ public class CollectionManager {
     {
         this.collection = Collections.synchronizedList(new LinkedList<>());
         this.dbManager = DBManager.getInstance();
+        this.dgDBp = new DragonGenomeDBProcessor(dbManager);
         load();
         Collections.sort(collection);
         instance = this;
@@ -69,7 +74,45 @@ public class CollectionManager {
 
     public boolean add(Dragon element, User user){
         boolean flag = dbManager.insertDragon(element, element.creatorId());
+
+        if (flag){
+            System.out.println("Added Dragon " + element.creatorId());
+        }
+        else {
+            System.out.println("Failed to add Dragon " + element.creatorId());
+        }
+
         load();
+
+        Optional idOptional = collection.stream()
+                .filter(Objects::nonNull)
+                .filter(d -> Objects.equals(d.name(), element.name()))
+                .filter(d -> Objects.equals(d.age(), element.age()))
+                .filter(d -> Objects.equals(d.dragonType(), element.dragonType()))
+                .filter(d -> Objects.equals(d.dragonCharacter(), element.dragonCharacter()))
+                .map(Dragon::id)
+                .findFirst();
+
+        long id = (long) idOptional.get();
+
+        if (idOptional.isEmpty()) {
+
+        }
+
+        Genome dragonGenome = element.genome();
+
+        if (dragonGenome == null) {
+            GenomeGenerator gg = new GenomeGenerator();
+            Genome genome = gg.generate(id);
+            element.genome(genome);
+            dragonGenome = genome;
+        }
+
+        try{
+            dgDBp.insert(id, dragonGenome);
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
         return flag;
     }
 
@@ -138,8 +181,15 @@ public class CollectionManager {
         try {
             HashMap<Integer, User> users = dbManager.selectUser();
             for (Dragon dragon : dbManager.selectDragon()) {
-                System.out.println("зашёл в цикл: "+ dragon.name());
                 collection.add(dragon);
+                Genome genome = dgDBp.select(dragon.id());
+
+                if (genome == null){
+                    GenomeGenerator gg = new GenomeGenerator();
+                    genome =  gg.generate(dragon.id());
+                    dgDBp.insert(dragon.id(), genome);
+                }
+                dragon.genome(genome);
                 dragonUserMap.put(dragon, users.get((int) (dragon.creatorId()-1)));
             }
         } catch (SQLException e) {
@@ -150,6 +200,12 @@ public class CollectionManager {
 
     public boolean update(int id, Dragon element, User user){
         boolean flag = false;
+
+        if (element.genome() == null) {
+            GenomeGenerator gg = new GenomeGenerator();
+            Genome genome = gg.generate(id);
+            element.genome(genome);
+        }
         element.id(id);
         if (user.id() == element.creatorId()) {
             flag = dbManager.updateDragon(element);
@@ -161,6 +217,11 @@ public class CollectionManager {
                         }
                     }
                 }
+            }
+            try {
+                dgDBp.insert(element.id(), element.genome());
+            } catch (SQLException e){
+                e.printStackTrace();
             }
         }
         return flag;

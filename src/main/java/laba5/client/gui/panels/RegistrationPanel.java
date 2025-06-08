@@ -6,41 +6,44 @@ import javafx.geometry.Insets;
 import laba5.client.Client;
 import laba5.common.dataExchanging.Request;
 import laba5.client.HashPassword;
+import laba5.client.l18n.Messages;
+
 import java.io.IOException;
 import java.util.Locale;
-import java.util.ResourceBundle;
 
 public class RegistrationPanel extends GridPane {
 
+    public interface RegistrationSuccessListener {
+        void onRegistrationSuccess(boolean success);
+    }
+
     public RegistrationPanel(Client client, Locale locale, RegistrationSuccessListener listener) {
-        ResourceBundle bundle = ResourceBundle.getBundle("laba5.client.l18n.Messages", locale);
+        Messages.setLocale(locale); // Установка текущей локали
 
         setPadding(new Insets(20));
         setVgap(10);
         setHgap(10);
 
-        Label usernameLabel = new Label(bundle.getString("registration.username"));
+        Label usernameLabel = new Label(getMessage("registration.username"));
         TextField usernameField = new TextField();
 
-        Label passwordLabel = new Label(bundle.getString("registration.password"));
+        Label passwordLabel = new Label(getMessage("registration.password"));
         PasswordField passwordField = new PasswordField();
 
-        Button registerButton = new Button(bundle.getString("registration.registerButton"));
-        Label statusLabel = new Label();
+        Button registerButton = new Button(getMessage("registration.registerButton"));
 
         add(usernameLabel, 0, 0);
         add(usernameField, 1, 0);
         add(passwordLabel, 0, 1);
         add(passwordField, 1, 1);
         add(registerButton, 1, 3);
-        add(statusLabel, 1, 4);
 
         registerButton.setOnAction(e -> {
             String username = usernameField.getText();
             String password = HashPassword.hashPassword(passwordField.getText());
 
             if (username.isEmpty() || password.isEmpty()) {
-                statusLabel.setText(bundle.getString("registration.emptyFields"));
+                showAlert(getMessage("alert.title.error"), getMessage("registration.emptyFields"));
                 return;
             }
 
@@ -48,15 +51,30 @@ public class RegistrationPanel extends GridPane {
             try {
                 var resp = client.communicateWithServer(req);
                 String message = resp.responseClaster().message();
-                statusLabel.setText(message);
-                if ("Вы авторизованы!".equals(message) || ("Вы зарегистрированы!").equals(message)) {
-                    listener.onRegistrationSuccess(true);
+
+                if ("Вы авторизованы!".equals(message) || "Вы зарегистрированы!".equals(message)) {
+                    showAlert(getMessage("alert.title.success"), message);
                     client.userauth.getUser().id(resp.statusCode());
+                    listener.onRegistrationSuccess(true);
+                } else {
+                    showAlert(getMessage("alert.title.info"), message);
                 }
 
             } catch (IOException ex) {
-                statusLabel.setText(bundle.getString("registration.connectionError"));
+                showAlert(getMessage("alert.title.error"), getMessage("registration.connectionError"));
             }
         });
+    }
+
+    private void showAlert(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    private String getMessage(String key) {
+        return (String) Messages.getBundle().handleGetObject(key);
     }
 }
